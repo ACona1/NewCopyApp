@@ -169,8 +169,8 @@ class MainActivity : AppCompatActivity() {
         } else {
             "لا توجد جلسة نشطة"
         }
-        val plan = if (session.isPremium()) "Premium مفعّل" else "الخطة المجانية"
-        val limit = if (session.isPremium()) "حتى 24 ساعة / جلسات غير محدودة" else "حتى 6 ساعات / 4 جلسات يوميًا"
+        val plan = if (session.isPremium) "Premium مفعّل" else "الخطة المجانية"
+        val limit = if (session.isPremium) "حتى 24 ساعة / جلسات غير محدودة" else "حتى 6 ساعات / 4 جلسات يوميًا"
         statusText.text = "المالك: ${session.ownerName}\n$plan\n$state\nالحد: $limit"
     }
 
@@ -300,7 +300,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showPremiumDialog() {
         val input = EditText(this).apply { hint = "كود الخصم" }
-        val current = if (session.isPremium()) "Premium مفعّل" else "الخطة المجانية"
+        val current = if (session.isPremium) "Premium مفعّل" else "الخطة المجانية"
         AlertDialog.Builder(this)
             .setTitle("Premium — نسخه جديد")
             .setMessage("المالك: ${session.ownerName}\nالحالة الحالية: $current\n\nأدخل كود الخصم لتفعيل Premium فورًا.")
