@@ -113,9 +113,8 @@ class SettingsStore(private val context: Context) {
         .map { preferences -> preferences.toAppSettings() }
 
     suspend fun update(transform: (AppSettings) -> AppSettings) {
-        context.appSettingsDataStore.updateData { preferences ->
-            val updated = transform(preferences.toAppSettings())
-            preferences.toBuilder().apply { updated.writeTo(this) }.build()
+        context.appSettingsDataStore.edit { preferences ->
+            transform(preferences.toAppSettings()).writeTo(preferences)
         }
     }
 
