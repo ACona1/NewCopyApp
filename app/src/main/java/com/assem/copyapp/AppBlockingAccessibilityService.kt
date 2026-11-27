@@ -1,159 +1,134 @@
 package com.assem.copyapp
 
 import android.accessibilityservice.AccessibilityService
-import android.graphics.Color
-import android.graphics.PixelFormat
-import android.provider.Settings
-import android.view.Gravity
-import android.view.View
-import android.view.WindowManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
-import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
-import androidx.core.content.ContextCompat
 
 class AppBlockingAccessibilityService : AccessibilityService() {
 
     private lateinit var session: SessionManager
-    private var windowManager: WindowManager? = null
-    private var overlayView: View? = null
-    private var overlayPackage: String? = null
+    private val handler = Handler(Looper.getMainLooper())
+    private var lockActive = false
+    private var receiverRegistered = false
+
+    private val checker = object : Runnable {
+        override fun run() {
+            try {
+                if (!session.isActive()) {
+                    if (lockActive) {
+                        lockActive = false
+                        sendBroadcast(Intent(BlockingActivity.ACTION_CLOSE))
+                    }
+                } else {
+                    val foreground = rootInActiveWindow?.packageName?.toString()
+                    if (!foreground.isNullOrBlank()) evaluate(foreground)
+                }
+            } catch (_: Exception) {
+            }
+            handler.postDelayed(this, 800L)
+        }
+    }
+
+    private val closeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == BlockingActivity.ACTION_CLOSE) {
+                lockActive = false
+            }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
         session = SessionManager(this)
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        registerCloseReceiver()
+        handler.post(checker)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event == null) return
-        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
-            event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
-        ) return
+        if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+        val pkg = event.packageName?.toString() ?: return
+        evaluate(pkg)
+    }
 
-        val pkg = event.packageName?.toString()
-            ?: rootInActiveWindow?.packageName?.toString()
-            ?: return
-
-        if (session.isBlocked(pkg)) {
-            showOverlay(pkg)
-        } else {
-            hideOverlay()
+    override fun onKeyEvent(event: KeyEvent): Boolean {
+        if (
+            lockActive &&
+            event.action == KeyEvent.ACTION_DOWN &&
+            (event.keyCode == KeyEvent.KEYCODE_BACK ||
+                event.keyCode == KeyEvent.KEYCODE_HOME ||
+                event.keyCode == KeyEvent.KEYCODE_APP_SWITCH)
+        ) {
+            return true
         }
+        return super.onKeyEvent(event)
     }
 
     override fun onInterrupt() {
-        hideOverlay()
+        lockActive = false
     }
 
     override fun onDestroy() {
-        hideOverlay()
+        handler.removeCallbacks(checker)
+        if (receiverRegistered) {
+            try {
+                unregisterReceiver(closeReceiver)
+            } catch (_: Exception) {
+            }
+            receiverRegistered = false
+        }
         super.onDestroy()
     }
 
-    private fun showOverlay(packageName: String) {
-        if (!Settings.canDrawOverlays(this)) return
-        if (overlayView != null && overlayPackage == packageName) return
-        hideOverlay()
-        overlayPackage = packageName
-
-        val root = FrameLayout(this).apply {
-            setBackgroundColor(Color.rgb(16, 18, 28))
-        }
-
-        val title = TextView(this).apply {
-            text = "التطبيق محظور أثناء جلسة التركيز"
-            textSize = 24f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-        }
-
-        val detail = TextView(this).apply {
-            text = packageName
-            textSize = 15f
-            setTextColor(Color.rgb(180, 190, 210))
-            gravity = Gravity.CENTER
-            setPadding(0, 12, 0, 28)
-        }
-
-        val homeButton = Button(this).apply {
-            text = "العودة للشاشة الرئيسية"
-            setOnClickListener { performGlobalAction(GLOBAL_ACTION_HOME) }
-        }
-
-        val emergencyButton = Button(this).apply {
-            text = "اتصال طوارئ"
-            setOnClickListener {
-                val intent = android.content.Intent(android.content.Intent.ACTION_DIAL).apply {
-                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                ContextCompat.startActivity(this@AppBlockingAccessibilityService, intent, null)
-            }
-        }
-
-        val stopButton = Button(this).apply {
-            text = "إنهاء جلسة التركيز"
-            setOnClickListener {
-                session.stop()
-                hideOverlay()
-                performGlobalAction(GLOBAL_ACTION_HOME)
-                Toast.makeText(
-                    this@AppBlockingAccessibilityService,
-                    "تم إنهاء الجلسة",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            addView(title)
-            addView(detail)
-            addView(homeButton)
-            addView(emergencyButton)
-            addView(stopButton)
-        }
-
-        root.addView(
-            box,
-            FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        )
-
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            PixelFormat.TRANSLUCENT
-        ).apply {
-            gravity = Gravity.TOP or Gravity.START
-        }
-
-        try {
-            windowManager?.addView(root, params)
-            overlayView = root
-        } catch (e: Exception) {
-            overlayView = null
+    private fun evaluate(packageName: String) {
+        if (packageName == this.packageName) return
+        if (session.isBlocked(packageName)) {
+            showBlockingUi(packageName)
         }
     }
 
-    private fun hideOverlay() {
-        overlayView?.let {
-            try {
-                windowManager?.removeView(it)
-            } catch (_: Exception) {
-            }
+    private fun showBlockingUi(packageName: String) {
+        if (rootInActiveWindow?.packageName?.toString() == this.packageName) return
+
+        lockActive = true
+        val intent = Intent(this, BlockingActivity::class.java).apply {
+            addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                    Intent.FLAG_ACTIVITY_NO_ANIMATION
+            )
+            putExtra(BlockingActivity.EXTRA_APP_LABEL, labelFor(packageName))
         }
-        overlayView = null
-        overlayPackage = null
+        try {
+            startActivity(intent)
+        } catch (_: Exception) {
+            lockActive = false
+        }
+    }
+
+    private fun labelFor(packageName: String): String = try {
+        val info = packageManager.getApplicationInfo(packageName, 0)
+        info.loadLabel(packageManager).toString()
+    } catch (_: Exception) {
+        packageName
+    }
+
+    private fun registerCloseReceiver() {
+        if (receiverRegistered) return
+        val filter = IntentFilter(BlockingActivity.ACTION_CLOSE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(closeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            registerReceiver(closeReceiver, filter)
+        }
+        receiverRegistered = true
     }
 }
