@@ -14,7 +14,9 @@
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 
     <application
+        android:name=".App"
         android:allowBackup="false"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -22,11 +24,15 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <activity
@@ -57,6 +63,29 @@
                 android:value="focus_session_timer" />
         </service>
 
+        <service
+            android:name=".FocusTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile"
+            android:label="@string/tile_start"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".FocusWidgetProvider"
+            android:exported="true"
+            android:label="@string/tile_start">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/focus_widget_info" />
+        </receiver>
+
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"
@@ -73,6 +102,24 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="com.assem.copyapp.START_SCHEDULE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".SessionActionReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.assem.copyapp.END_SOFT" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".DigestReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.assem.copyapp.DAILY_DIGEST" />
             </intent-filter>
         </receiver>
     </application>
