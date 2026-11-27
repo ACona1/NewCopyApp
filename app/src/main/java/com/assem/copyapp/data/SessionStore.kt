@@ -102,28 +102,22 @@ class SessionStore(private val context: Context) {
         .map { preferences -> preferences.toSessionState() }
 
     suspend fun start(state: SessionState) {
-        context.appSessionDataStore.updateData { preferences ->
-            preferences.toBuilder().apply { state.writeTo(this) }.build()
-        }
+        context.appSessionDataStore.edit { preferences -> state.writeTo(preferences) }
     }
 
     suspend fun update(transform: (SessionState) -> SessionState) {
-        context.appSessionDataStore.updateData { preferences ->
-            val updated = transform(preferences.toSessionState())
-            preferences.toBuilder().apply { updated.writeTo(this) }.build()
+        context.appSessionDataStore.edit { preferences ->
+            transform(preferences.toSessionState()).writeTo(preferences)
         }
     }
 
     suspend fun clear() {
-        context.appSessionDataStore.updateData { preferences ->
-            preferences.toBuilder().apply { SessionState().writeTo(this) }.build()
-        }
+        context.appSessionDataStore.edit { preferences -> SessionState().writeTo(preferences) }
     }
 
     suspend fun pauseFor(monoUntil: Long) {
-        context.appSessionDataStore.updateData { preferences ->
-            val updated = preferences.toSessionState().copy(pauseUntilMono = monoUntil)
-            preferences.toBuilder().apply { updated.writeTo(this) }.build()
+        context.appSessionDataStore.edit { preferences ->
+            preferences.toSessionState().copy(pauseUntilMono = monoUntil).writeTo(preferences)
         }
     }
 }
