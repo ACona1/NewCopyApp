@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">New Copy</string>
+    <string name="owner_name">Assem</string>
+    <string name="accessibility_description">App blocker for New Copy. When a blocked app is opened during a focus session, a full-screen blocker appears and prevents using it until the session ends. All data stays on the device.</string>
+    <string name="blocking_title">App blocked</string>
+
+    <string name="status_card">Current status</string>
+    <string name="no_active_session">No active session</string>
+    <string name="owner_line">Owner: %1$s</string>
+    <string name="blocked_count_line">Blocked apps: %1$d</string>
+    <string name="start_focus">Start focus</string>
+    <string name="end_session">End session</string>
+    <string name="strict_mode_label">Strict focus (block every app except phone and messages)</string>
+    <string name="strict_enabled">Strict mode enabled</string>
+    <string name="strict_disabled">Strict mode disabled</string>
+
+    <string name="permissions_card">Permissions</string>
+    <string name="review_permissions">Review permissions</string>
+    <string name="permission_summary">Blocking %1$s | Stats %2$s\nNotifications %3$s | Battery %4$s</string>
+    <string name="perm_on">✅</string>
+    <string name="perm_off">❌</string>
+
+    <string name="blocked_apps_card">Blocked apps</string>
+    <string name="search_hint">Search an app…</string>
+    <string name="select_all">Select all</string>
+    <string name="clear_all">Clear all</string>
+
+    <string name="duration_card">Session duration</string>
+    <string name="minutes_hint">In minutes</string>
+    <string name="duration_15">15 m</string>
+    <string name="duration_30">30 m</string>
+    <string name="duration_60">60 m</string>
+    <string name="duration_120">120 m</string>
+    <string name="session_started">Session started for %1$d minutes</string>
+    <string name="already_running">A session is already running</string>
+    <string name="invalid_duration">Invalid duration</string>
+    <string name="no_apps_selected">Select at least one app</string>
+    <string name="session_stopped">Session ended</string>
+    <string name="enable_accessibility_first">Enable the blocking service in permissions first</string>
+    <string name="enable_blocking_first">Enable the blocking service first</string>
+    <string name="permissions_hint">Enable the service, then come back</string>
+
+    <string name="schedule_card">Daily schedule</string>
+    <string name="schedule_off">Schedule: off</string>
+    <string name="schedule_range">Schedule: %1$s — %2$s</string>
+    <string name="start_time">Start time</string>
+    <string name="end_time">End time</string>
+    <string name="activate_schedule">Activate schedule</string>
+    <string name="cancel_schedule">Cancel schedule</string>
+    <string name="schedule_saved">Schedule saved</string>
+    <string name="schedule_pick_times">Pick start and end time first</string>
+    <string name="schedule_applied">Schedule applied and session started</string>
+    <string name="schedule_cannot_start">Could not start session: %1$s</string>
+    <string name="schedule_enabled">Schedule enabled, it will start automatically at the set time</string>
+    <string name="schedule_cancelled">Schedule cancelled</string>
+
+    <string name="usage_not_enabled">Usage stats are off.\nTap the button below and allow access to app usage.</string>
+    <string name="no_usage_data">No usage data for today.</string>
+    <string name="screen_time_today">Screen time today: %1$s</string>
+    <string name="usage_refreshed">Stats refreshed</string>
+    <string name="usage_enable_hint">Enable usage access, then come back</string>
+    <string name="cleanup_card">Device cleanup and performance</string>
+    <string name="usage_stats_button">Usage stats and access</string>
+    <string name="cleanup_button">Clean background apps</string>
+    <string name="cleanup_title">Clean background</string>
+    <string name="cleanup_message">Selected apps will be stopped without deleting their data.</string>
+    <string name="cleanup_action">Clean</string>
+    <string name="cleanup_cancel">Cancel</string>
+    <string name="cleanup_done">Cleaned %1$d apps</string>
+    <string name="cleanup_empty">No cleanable apps right now</string>
+
+    <string name="device_card">Device info</string>
+    <string name="battery_line">Battery: %1$s (%2$s)</string>
+    <string name="battery_unknown">unknown</string>
+    <string name="battery_charging">charging</string>
+    <string name="battery_discharging">on battery</string>
+    <string name="storage_line">Free storage: %1$s / %2$s GB</string>
+    <string name="memory_line">Free RAM: %1$d MB</string>
+
+    <string name="focus_stats_card">Focus stats</string>
+    <string name="sessions_today">Sessions today: %1$d</string>
+    <string name="focus_minutes_today">Focus minutes today: %1$d</string>
+    <string name="last_sessions">Last sessions:</string>
+    <string name="no_history">No history yet</string>
+    <string name="history_line">• %1$s: %2$d min / %3$d apps</string>
+    <string name="version_line">New Copy · v2.0 · anti brain-rot system</string>
+
+    <string name="blocking_message">A focus session is active.\nThe app was killed in the background and cannot be used until the time is up.</string>
+    <string name="blocking_home">Back to home</string>
+    <string name="blocking_emergency">Emergency call</string>
+    <string name="blocking_stop">End focus session</string>
+    <string name="block_exit_not_allowed">Cannot exit during a focus session</string>
+
+    <string name="notification_channel">Focus sessions</string>
+    <string name="notification_title">New Copy</string>
+    <string name="notification_active">Focus session active</string>
+    <string name="notification_remaining">Remaining: %1$s</string>
+    <string name="notification_done_title">Focus session finished</string>
+    <string name="notification_done_text">Blocked apps are available again.</string>
+</resources>
