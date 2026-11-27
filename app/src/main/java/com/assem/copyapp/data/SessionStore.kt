@@ -93,7 +93,7 @@ private fun SessionState.writeTo(prefs: MutablePreferences) {
     prefs[PREF_SESSION_ID] = sessionId
 }
 
-class SessionStore(context: Context) {
+class SessionStore(private val context: Context) {
 
     val flow: Flow<SessionState> = context.appSessionDataStore.data
         .catch { error ->
