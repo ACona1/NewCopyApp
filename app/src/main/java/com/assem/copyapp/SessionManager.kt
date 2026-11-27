@@ -2,6 +2,8 @@ package com.assem.copyapp
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.content.pm.PackageManager
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -20,6 +22,13 @@ class SessionManager(context: Context) {
     val maxMinutes: Int
         get() = if (isPremium) 24 * 60 else 6 * 60
 
+    val strictMode: Boolean
+        get() = sp.getBoolean(Prefs.KEY_STRICT_MODE, false)
+
+    fun setStrictMode(enabled: Boolean) {
+        sp.edit().putBoolean(Prefs.KEY_STRICT_MODE, enabled).apply()
+    }
+
     fun blockedPackages(): Set<String> =
         sp.getStringSet(Prefs.KEY_BLOCKED, emptySet()) ?: emptySet()
 
@@ -31,13 +40,17 @@ class SessionManager(context: Context) {
 
     fun sessionEnd(): Long = sp.getLong(Prefs.KEY_SESSION_END, 0L)
 
-    fun isActive(): Boolean {
+    fun isActive(): Boolean = sessionEnd() > System.currentTimeMillis()
+
+    fun finalizeExpired(): Boolean {
+        val start = sessionStart()
         val end = sessionEnd()
-        if (end <= System.currentTimeMillis()) {
-            if (end != 0L) clearSessionOnly()
-            return false
+        if (end != 0L && end <= System.currentTimeMillis()) {
+            if (end > start) recordCompletion(((end - start) / 60_000L).toInt().coerceAtLeast(1))
+            clearSessionOnly()
+            return true
         }
-        return true
+        return false
     }
 
     fun remainingMillis(): Long {
@@ -53,9 +66,13 @@ class SessionManager(context: Context) {
         return ((now - start) * 100 / (end - start)).toInt().coerceIn(0, 100)
     }
 
+    fun isEssential(packageName: String?): Boolean =
+        !packageName.isNullOrBlank() && essentialPackages().contains(packageName)
+
     fun isBlocked(packageName: String?): Boolean {
         if (packageName.isNullOrBlank() || !isActive()) return false
-        return blockedPackages().contains(packageName)
+        if (isEssential(packageName)) return false
+        return if (strictMode) true else blockedPackages().contains(packageName)
     }
 
     fun start(durationMinutes: Int, packages: Set<String>): StartResult {
@@ -63,7 +80,7 @@ class SessionManager(context: Context) {
         if (durationMinutes <= 0) return StartResult.InvalidDuration
         if (durationMinutes > maxMinutes) return StartResult.LimitExceeded
         if (!isPremium && todayCount() >= FREE_DAILY_LIMIT) return StartResult.DailyLimitReached
-        if (packages.isEmpty()) return StartResult.NoAppsSelected
+        if (!strictMode && packages.isEmpty()) return StartResult.NoAppsSelected
 
         val now = System.currentTimeMillis()
         val end = now + durationMinutes * 60_000L
@@ -78,6 +95,13 @@ class SessionManager(context: Context) {
     }
 
     fun stop() {
+        val start = sessionStart()
+        val end = sessionEnd()
+        if (start > 0 && end > start) {
+            val elapsed = ((minOf(System.currentTimeMillis(), end) - start) / 60_000L)
+                .toInt().coerceAtLeast(1)
+            recordCompletion(elapsed)
+        }
         clearSessionOnly()
         appContext.sendBroadcast(Intent(BlockingActivity.ACTION_CLOSE))
     }
@@ -102,6 +126,65 @@ class SessionManager(context: Context) {
 
     fun schedule(): Pair<Int, Int> =
         sp.getInt(Prefs.KEY_SCHEDULE_START, -1) to sp.getInt(Prefs.KEY_SCHEDULE_END, -1)
+
+    fun sessionsToday(): Int = todayCount()
+
+    fun focusMinutesToday(): Int =
+        if (sp.getString(Prefs.KEY_FOCUS_DATE, "") == today()) {
+            sp.getInt(Prefs.KEY_FOCUS_MINUTES, 0)
+        } else {
+            0
+        }
+
+    fun history(): List<Triple<String, Int, Int>> =
+        (sp.getString(Prefs.KEY_HISTORY, "") ?: "")
+            .split(';')
+            .filter { it.isNotBlank() }
+            .mapNotNull { entry ->
+                val parts = entry.split('|')
+                if (parts.size == 3) {
+                    Triple(
+                        parts[0],
+                        parts[1].toIntOrNull() ?: 0,
+                        parts[2].toIntOrNull() ?: 0
+                    )
+                } else {
+                    null
+                }
+            }
+
+    private fun recordCompletion(minutes: Int) {
+        if (sp.getString(Prefs.KEY_FOCUS_DATE, "") != today()) {
+            sp.edit()
+                .putString(Prefs.KEY_FOCUS_DATE, today())
+                .putInt(Prefs.KEY_FOCUS_MINUTES, 0)
+                .apply()
+        }
+        sp.edit()
+            .putInt(Prefs.KEY_FOCUS_MINUTES, sp.getInt(Prefs.KEY_FOCUS_MINUTES, 0) + minutes)
+            .apply()
+        val entry = "${today()}|$minutes|${blockedPackages().size}"
+        val items = history().toMutableList()
+        items.add(0, entry)
+        sp.edit().putString(Prefs.KEY_HISTORY, items.take(5).joinToString(";")).apply()
+    }
+
+    private fun essentialPackages(): Set<String> {
+        val result = mutableSetOf(appContext.packageName, "com.android.systemui")
+        val pm = appContext.packageManager
+        val intents = listOf(
+            Intent(Intent.ACTION_DIAL),
+            Intent(Intent.ACTION_SENDTO).apply { data = Uri.parse("smsto:") }
+        )
+        for (intent in intents) {
+            try {
+                pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                    ?.activityInfo?.packageName?.let { result.add(it) }
+            } catch (_: Exception) {
+            }
+        }
+        return result
+    }
 
     private fun today(): String = dateFormat.format(Date())
 
