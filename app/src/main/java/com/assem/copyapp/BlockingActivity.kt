@@ -80,7 +80,7 @@ class BlockingActivity : AppCompatActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        Toast.makeText(this, "لا يمكن الخروج أثناء جلسة التركيز", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.block_exit_not_allowed), Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroy() {
@@ -121,7 +121,7 @@ class BlockingActivity : AppCompatActivity() {
         }
 
         val message = TextView(this).apply {
-            text = "جلسة التركيز نشطة.\nتم إغلاق التطبيق في الخلفية، ولا يمكن استخدامه حتى انتهاء الوقت المحدد."
+            text = getString(R.string.blocking_message)
             textSize = 15f
             setTextColor(ContextCompat.getColor(this@BlockingActivity, R.color.muted))
             gravity = Gravity.CENTER
@@ -144,7 +144,7 @@ class BlockingActivity : AppCompatActivity() {
             ).apply { setMargins(dp(16), 0, dp(16), dp(24)) }
         }
 
-        val homeButton = actionButton("العودة للشاشة الرئيسية", R.color.primary) {
+        val homeButton = actionButton(getString(R.string.blocking_home), R.color.primary) {
             startActivity(
                 Intent(Intent.ACTION_MAIN).apply {
                     addCategory(Intent.CATEGORY_HOME)
@@ -153,13 +153,13 @@ class BlockingActivity : AppCompatActivity() {
             )
         }
 
-        val emergencyButton = actionButton("اتصال طوارئ", R.color.surface_2) {
+        val emergencyButton = actionButton(getString(R.string.blocking_emergency), R.color.surface_2) {
             startActivity(
                 Intent(Intent.ACTION_DIAL).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
         }
 
-        val stopButton = actionButton("إنهاء جلسة التركيز", R.color.danger) {
+        val stopButton = actionButton(getString(R.string.blocking_stop), R.color.danger) {
             session.stop()
             finish()
         }
