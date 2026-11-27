@@ -10,7 +10,7 @@ import org.junit.Test
 class ScoreCalculatorTest {
 
     @Test
-    fun score_is_clamped_and_focus_reduces_it() {
+    fun score_is_clamped_and_focus_lowers_it() {
         val bad = ScoreCalculator.score(
             ScoreCalculator.ScoreInput(reels = 20, shorts = 20, feedScrolls = 50, breaks = 5, budgetBreaches = 5)
         )
@@ -19,7 +19,8 @@ class ScoreCalculatorTest {
         )
         assertTrue(bad in 0..100)
         assertTrue(good in 0..100)
-        assertTrue(bad > good)
+        assertEquals(0, bad)
+        assertTrue(good > bad)
     }
 
     @Test
