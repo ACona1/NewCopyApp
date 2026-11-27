@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_tile"
+        android:shortcutId="start_focus"
+        android:shortcutLongLabel="@string/tile_start"
+        android:shortcutShortLabel="@string/tile_start">
+        <intent
+            android:action="com.assem.copyapp.START_FOCUS"
+            android:targetClass="com.assem.copyapp.MainActivity"
+            android:targetPackage="com.assem.copyapp" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_tile"
+        android:shortcutId="open_insights"
+        android:shortcutLongLabel="@string/tab_insights"
+        android:shortcutShortLabel="@string/tab_insights">
+        <intent
+            android:action="com.assem.copyapp.OPEN_INSIGHTS"
+            android:targetClass="com.assem.copyapp.MainActivity"
+            android:targetPackage="com.assem.copyapp" />
+    </shortcut>
+</shortcuts>
