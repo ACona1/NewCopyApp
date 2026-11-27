@@ -1,12 +1,14 @@
 package com.assem.copyapp
 
 import android.content.Context
+import android.content.Intent
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class SessionManager(context: Context) {
-    private val sp = Prefs.get(context)
+    private val appContext = context.applicationContext
+    private val sp = Prefs.get(appContext)
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     val ownerName: String
@@ -25,6 +27,8 @@ class SessionManager(context: Context) {
         sp.edit().putStringSet(Prefs.KEY_BLOCKED, packages).apply()
     }
 
+    fun sessionStart(): Long = sp.getLong(Prefs.KEY_SESSION_START, 0L)
+
     fun sessionEnd(): Long = sp.getLong(Prefs.KEY_SESSION_END, 0L)
 
     fun isActive(): Boolean {
@@ -39,6 +43,14 @@ class SessionManager(context: Context) {
     fun remainingMillis(): Long {
         val end = sessionEnd()
         return if (end > System.currentTimeMillis()) end - System.currentTimeMillis() else 0L
+    }
+
+    fun progressPercent(): Int {
+        val start = sessionStart()
+        val end = sessionEnd()
+        if (end <= start) return 0
+        val now = System.currentTimeMillis().coerceIn(start, end)
+        return ((now - start) * 100 / (end - start)).toInt().coerceIn(0, 100)
     }
 
     fun isBlocked(packageName: String?): Boolean {
@@ -67,6 +79,7 @@ class SessionManager(context: Context) {
 
     fun stop() {
         clearSessionOnly()
+        appContext.sendBroadcast(Intent(BlockingActivity.ACTION_CLOSE))
     }
 
     fun redeem(code: String): Boolean {
