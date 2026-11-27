@@ -1,121 +1,109 @@
 package com.assem.copyapp
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
-import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
+import com.assem.copyapp.domain.BlockReason
+import com.assem.copyapp.domain.Decision
+import com.assem.copyapp.domain.GateReason
+import com.assem.copyapp.domain.NodeInfoSnapshot
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AppBlockingAccessibilityService : AccessibilityService() {
 
-    private lateinit var session: SessionManager
-    private val handler = Handler(Looper.getMainLooper())
-    private var lockActive = false
-    private var lastBlockedPackage: String? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var receiverRegistered = false
-
-    private val checker = object : Runnable {
-        override fun run() {
-            try {
-                if (!session.isActive()) {
-                    if (lockActive) {
-                        lockActive = false
-                        lastBlockedPackage = null
-                        sendBroadcast(Intent(BlockingActivity.ACTION_CLOSE))
-                    }
-                } else {
-                    val foreground = rootInActiveWindow?.packageName?.toString()
-                    if (!foreground.isNullOrBlank()) evaluate(foreground)
-                }
-            } catch (_: Exception) {
-            }
-            handler.postDelayed(this, 800L)
-        }
-    }
+    private var lastBlocked: String? = null
 
     private val closeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == BlockingActivity.ACTION_CLOSE) {
-                lockActive = false
-                lastBlockedPackage = null
-            }
+            if (intent.action == BlockingActivity.ACTION_CLOSE) lastBlocked = null
         }
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        session = SessionManager(this)
-        registerCloseReceiver()
-        handler.post(checker)
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        serviceInfo = serviceInfo?.apply {
+            eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or
+                AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+            feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
+            flags = flags or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
+                AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
+            notificationTimeout = 50
+        }
+        registerClose()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
-        val pkg = event.packageName?.toString() ?: return
-        val className = event.className?.toString().orEmpty()
-
+        if (event == null) return
         if (
-            pkg == "com.android.systemui" &&
-            className.contains("Recents", ignoreCase = true) &&
-            session.isActive() &&
-            lastBlockedPackage != null
-        ) {
-            val blocked = lastBlockedPackage ?: return
-            killApp(blocked)
-            performGlobalAction(GLOBAL_ACTION_HOME)
-            handler.postDelayed({ showBlockingUi(blocked) }, 200L)
-            return
-        }
+            event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+        ) return
 
-        evaluate(pkg)
-    }
+        val container = (applicationContext as App).container
+        val root = rootInActiveWindow
+        val pkg = event.packageName?.toString()?.takeIf { it.isNotBlank() }
+            ?: root?.packageName?.toString()?.takeIf { it.isNotBlank() }
+            ?: return
+        val className = event.className?.toString()?.takeIf { it.isNotBlank() }
+            ?: root?.className?.toString().orEmpty()
+        val snapshot = root?.let { snapshotOf(it) }
 
-    override fun onKeyEvent(event: KeyEvent): Boolean {
-        if (
-            lockActive &&
-            event.action == KeyEvent.ACTION_DOWN &&
-            (event.keyCode == KeyEvent.KEYCODE_BACK ||
-                event.keyCode == KeyEvent.KEYCODE_HOME ||
-                event.keyCode == KeyEvent.KEYCODE_APP_SWITCH)
-        ) {
-            return true
+        scope.launch {
+            container.lastNode.value = snapshot
+            val decision = container.enforcementEngine.decide(pkg, className, snapshot)
+            when (decision) {
+                is Decision.Allow -> Unit
+                is Decision.BlockApp -> withContext(Dispatchers.Main) {
+                    blockApp(decision.packageName, decision.reason)
+                }
+                is Decision.BlockSection -> withContext(Dispatchers.Main) {
+                    blockApp(decision.packageName, decision.reason)
+                }
+                is Decision.Gate -> withContext(Dispatchers.Main) {
+                    blockApp(decision.packageName.ifBlank { pkg }, decision.reason.toBlockReason())
+                }
+                is Decision.CountOnly -> {
+                    container.sessionController.addUsedMinutes(decision.packageName, 1)
+                }
+            }
         }
-        return super.onKeyEvent(event)
     }
 
     override fun onInterrupt() {
-        lockActive = false
+        lastBlocked = null
     }
 
     override fun onDestroy() {
-        handler.removeCallbacks(checker)
+        scope.cancel()
         if (receiverRegistered) {
-            try {
-                unregisterReceiver(closeReceiver)
-            } catch (_: Exception) {
-            }
+            runCatching { unregisterReceiver(closeReceiver) }
             receiverRegistered = false
         }
         super.onDestroy()
     }
 
-    private fun evaluate(packageName: String) {
+    private fun blockApp(packageName: String, reason: BlockReason) {
         if (packageName == this.packageName) return
-        if (session.isBlocked(packageName)) showBlockingUi(packageName)
-    }
-
-    private fun showBlockingUi(packageName: String) {
         if (rootInActiveWindow?.packageName?.toString() == this.packageName) return
+        if (packageName == lastBlocked) return
 
-        lockActive = true
-        lastBlockedPackage = packageName
+        lastBlocked = packageName
         killApp(packageName)
+        performGlobalAction(GLOBAL_ACTION_HOME)
 
         val intent = Intent(this, BlockingActivity::class.java).apply {
             addFlags(
@@ -125,38 +113,52 @@ class AppBlockingAccessibilityService : AccessibilityService() {
                     Intent.FLAG_ACTIVITY_NO_ANIMATION
             )
             putExtra(BlockingActivity.EXTRA_APP_LABEL, labelFor(packageName))
+            putExtra(BlockingActivity.EXTRA_REASON, reason.name)
         }
-        try {
-            startActivity(intent)
-        } catch (_: Exception) {
-            lockActive = false
-        }
+        runCatching { startActivity(intent) }.onFailure { lastBlocked = null }
     }
 
     private fun killApp(packageName: String) {
-        try {
-            val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            activityManager.killBackgroundProcesses(packageName)
-            for (task in activityManager.appTasks) {
-                try {
-                    val taskPackage = task.taskInfo?.topActivity?.packageName
-                        ?: task.taskInfo?.baseIntent?.component?.packageName
-                    if (taskPackage == packageName) task.finishAndRemoveTask()
-                } catch (_: Exception) {
-                }
-            }
-        } catch (_: Exception) {
+        runCatching {
+            val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            am.killBackgroundProcesses(packageName)
         }
     }
 
-    private fun labelFor(packageName: String): String = try {
-        val info = packageManager.getApplicationInfo(packageName, 0)
-        info.loadLabel(packageManager).toString()
-    } catch (_: Exception) {
-        packageName
+    private fun labelFor(packageName: String): String = runCatching {
+        packageManager.getApplicationInfo(packageName, 0).loadLabel(packageManager).toString()
+    }.getOrDefault(packageName)
+
+    private fun snapshotOf(node: AccessibilityNodeInfo): NodeInfoSnapshot {
+        val texts = mutableListOf<String>()
+        var viewId: String? = null
+        var contentDesc: String? = null
+        val stack = ArrayDeque<AccessibilityNodeInfo>()
+        stack.add(node)
+        var visited = 0
+        while (stack.isNotEmpty() && visited < 80) {
+            val current = stack.removeFirst()
+            visited++
+            current.text?.toString()?.takeIf { it.isNotBlank() }?.let { texts.add(it) }
+            if (viewId == null) current.viewIdResourceName?.takeIf { it.isNotBlank() }?.let { viewId = it }
+            if (contentDesc == null) {
+                current.contentDescription?.toString()?.takeIf { it.isNotBlank() }?.let { contentDesc = it }
+            }
+            for (i in 0 until current.childCount) {
+                current.getChild(i)?.let { stack.addLast(it) }
+            }
+        }
+        return NodeInfoSnapshot(
+            packageName = node.packageName?.toString(),
+            className = node.className?.toString(),
+            text = texts.firstOrNull(),
+            contentDescription = contentDesc,
+            viewIdResourceName = viewId,
+            childTexts = texts.take(20)
+        )
     }
 
-    private fun registerCloseReceiver() {
+    private fun registerClose() {
         if (receiverRegistered) return
         val filter = IntentFilter(BlockingActivity.ACTION_CLOSE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -166,5 +168,13 @@ class AppBlockingAccessibilityService : AccessibilityService() {
             registerReceiver(closeReceiver, filter)
         }
         receiverRegistered = true
+    }
+
+    private fun GateReason.toBlockReason(): BlockReason = when (this) {
+        GateReason.BUDGET -> BlockReason.BUDGET
+        GateReason.BREAK -> BlockReason.SESSION_APP
+        GateReason.PAUSE -> BlockReason.SESSION_APP
+        GateReason.FRIEND_KEY -> BlockReason.SESSION_APP
+        GateReason.EMERGENCY -> BlockReason.SESSION_APP
     }
 }
