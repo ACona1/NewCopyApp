@@ -1,11 +1,15 @@
 package com.assem.copyapp
 
 import android.Manifest
+import android.app.ActivityManager
 import android.app.AlarmManager
+import android.app.AppOpsManager
 import android.app.PendingIntent
 import android.app.TimePickerDialog
+import android.app.usage.UsageStatsManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.IntentFilter
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -14,9 +18,13 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.PowerManager
+import android.os.Process
+import android.os.StatFs
 import android.provider.Settings
 import android.text.Editable
 import android.text.InputType
@@ -50,6 +58,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var permissionText: TextView
     private lateinit var scheduleText: TextView
     private lateinit var premiumStatusText: TextView
+    private lateinit var usageText: TextView
+    private lateinit var deviceText: TextView
+    private lateinit var statsText: TextView
+    private lateinit var strictCheck: CheckBox
     private lateinit var appsBox: LinearLayout
     private lateinit var searchInput: EditText
     private lateinit var durationInput: EditText
@@ -118,6 +130,24 @@ class MainActivity : AppCompatActivity() {
                 actionButton("بدء جلسة تركيز", R.color.primary) { startFocusSession() },
                 actionButton("إنهاء الجلسة", R.color.surface_2) { stopSession() }
             )
+        )
+        strictCheck = CheckBox(this).apply {
+            text = "وضع التركيز الشديد (حظر كل التطبيقات إلا الهاتف والرسائل)"
+            textSize = 13f
+            setTextColor(color(R.color.muted))
+            buttonTintList = ColorStateList.valueOf(color(R.color.primary))
+            isChecked = session.strictMode
+            setOnClickListener {
+                session.setStrictMode(isChecked)
+                toast(if (isChecked) "تم تفعيل الوضع الشديد" else "تم إيقاف الوضع الشديد")
+            }
+        }
+        dash.addView(
+            strictCheck,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(0, dp(10), 0, 0) }
         )
         root.addView(dash)
 
@@ -272,8 +302,39 @@ class MainActivity : AppCompatActivity() {
         premiumCard.addView(redeemButton)
         root.addView(premiumCard)
 
+        val cleanCard = card("نظافة الجهاز والأداء")
+        usageText = body("—")
+        cleanCard.addView(usageText)
+        val usageButton = actionButton("إحصاءات الاستخدام والصلاحية", R.color.surface_2) {
+            showUsageInfo()
+        }
+        usageButton.layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { setMargins(0, dp(8), 0, 0) }
+        cleanCard.addView(usageButton)
+        val cleanButton = actionButton("تنظيف التطبيقات في الخلفية", R.color.primary) {
+            showCleanupDialog()
+        }
+        cleanButton.layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { setMargins(0, dp(6), 0, 0) }
+        cleanCard.addView(cleanButton)
+        root.addView(cleanCard)
+
+        val deviceCard = card("معلومات الجهاز")
+        deviceText = body("—")
+        deviceCard.addView(deviceText)
+        root.addView(deviceCard)
+
+        val statsCard = card("إحصاءات التركيز")
+        statsText = body("—")
+        statsCard.addView(statsText)
+        root.addView(statsCard)
+
         root.addView(
-            body("نسخه جديد · إصدار 1.1 · حظر كامل أثناء جلسة التركيز", R.color.muted, 12f)
+            body("نسخه جديد · إصدار 1.2 · حظر كامل + تنظيف الخلفية", R.color.muted, 12f)
                 .apply { gravity = Gravity.CENTER; setPadding(0, dp(20), 0, 0) }
         )
 
@@ -315,6 +376,11 @@ class MainActivity : AppCompatActivity() {
         } else {
             "الخطة المجانية — أدخل الكود لتفعيل Premium"
         }
+
+        strictCheck.isChecked = session.strictMode
+        usageText.text = usageSummary()
+        deviceText.text = deviceSummary()
+        statsText.text = focusSummary()
     }
 
     private fun loadInstalledApps() {
@@ -414,6 +480,9 @@ class MainActivity : AppCompatActivity() {
         if (!isAccessibilityEnabled()) {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
+        if (!hasUsageStatsAccess()) {
+            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        }
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -459,8 +528,9 @@ class MainActivity : AppCompatActivity() {
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         ) "✅" else "❌"
         val battery = if (isIgnoringBatteryOptimization()) "✅" else "❌"
+        val usage = if (hasUsageStatsAccess()) "✅" else "❌"
         val deviceAdmin = if (isAdminActive()) "✅" else "❌"
-        return "خدمة الحظر $accessibility   |   الإشعارات $notifications   |   البطارية $battery   |   الحماية $deviceAdmin"
+        return "الحظر $accessibility   |   الإحصاءات $usage   |   الإشعارات $notifications\nالبطارية $battery   |   الحماية $deviceAdmin"
     }
 
     private fun isAccessibilityEnabled(): Boolean {
@@ -582,6 +652,146 @@ class MainActivity : AppCompatActivity() {
             AlarmManager.INTERVAL_DAY,
             pendingIntent
         )
+    }
+
+    private fun hasUsageStatsAccess(): Boolean {
+        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            appOps.unsafeCheckOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                Process.myUid(),
+                packageName
+            ) == AppOpsManager.MODE_ALLOWED
+        } else {
+            @Suppress("DEPRECATION")
+            appOps.checkOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                Process.myUid(),
+                packageName
+            ) == AppOpsManager.MODE_ALLOWED
+        }
+    }
+
+    private fun usageSummary(): String {
+        if (!hasUsageStatsAccess()) {
+            return "إحصاءات الاستخدام غير مفعّلة.\nاضغط الزر أدناه واسمح للتطبيق بقراءة استخدام التطبيقات."
+        }
+        val manager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val from = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        val stats = manager.queryUsageStats(
+            UsageStatsManager.INTERVAL_DAILY,
+            from,
+            System.currentTimeMillis()
+        ).orEmpty()
+        val totals = stats
+            .groupBy { it.packageName }
+            .map { (pkg, list) -> pkg to list.sumOf { it.totalTimeInForeground } }
+            .filter { (pkg, ms) -> ms > 0 && !session.isEssential(pkg) }
+            .sortedByDescending { it.second }
+        if (totals.isEmpty()) return "لا توجد بيانات استخدام لهذا اليوم."
+        val total = totals.sumOf { it.second }
+        val top = totals.take(4).joinToString("\n") {
+            "• ${labelFor(it.first)} — ${formatDuration(it.second)}"
+        }
+        return "زمن الشاشة اليوم: ${formatDuration(total)}\n$top"
+    }
+
+    private fun showUsageInfo() {
+        if (!hasUsageStatsAccess()) {
+            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+            toast("فعّل إحصاءات الاستخدام ثم ارجع")
+        } else {
+            usageText.text = usageSummary()
+            toast("تم تحديث الإحصاءات")
+        }
+    }
+
+    private fun showCleanupDialog() {
+        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        @Suppress("DEPRECATION")
+        val processes = activityManager.runningAppProcesses.orEmpty()
+            .filter {
+                it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_BACKGROUND
+            }
+            .map { it.processName }
+            .filter { name ->
+                name != packageName &&
+                    !session.isEssential(name) &&
+                    !name.startsWith("com.google.android.gms") &&
+                    !name.startsWith("android.")
+            }
+            .distinct()
+            .take(10)
+        if (processes.isEmpty()) {
+            toast("لا توجد تطبيقات قابلة للتنظيف حاليًا")
+            return
+        }
+        val labels = processes.map { labelFor(it) }.toTypedArray()
+        val checked = BooleanArray(processes.size) { true }
+        AlertDialog.Builder(this)
+            .setTitle("تنظيف الخلفية")
+            .setMessage("سيتم إيقاف التطبيقات المختارة دون حذف بياناتها.")
+            .setMultiChoiceItems(labels, checked) { _, which, value -> checked[which] = value }
+            .setPositiveButton("تنظيف") { _, _ ->
+                var count = 0
+                for (index in processes.indices) {
+                    if (checked[index]) {
+                        activityManager.killBackgroundProcesses(processes[index])
+                        count++
+                    }
+                }
+                toast("تم تنظيف $count تطبيق")
+                updateStatus()
+            }
+            .setNegativeButton("إلغاء", null)
+            .show()
+    }
+
+    private fun deviceSummary(): String {
+        val battery = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val level = battery?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale = battery?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
+        val percent = if (level >= 0 && scale > 0) level * 100 / scale else -1
+        val plugged = battery?.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) ?: 0
+        val charging = if (plugged > 0) "يشحن" else "على البطارية"
+        val storage = StatFs(Environment.getDataDirectory().path)
+        val freeGb = storage.availableBytes / (1024f * 1024f * 1024f)
+        val totalGb = storage.totalBytes / (1024f * 1024f * 1024f)
+        val memory = ActivityManager.MemoryInfo()
+        (getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(memory)
+        val availableMb = memory.availMem / (1024f * 1024f)
+        return "البطارية: ${if (percent >= 0) "$percent%" else "غير معروف"} ($charging)\n" +
+            "المساحة المتاحة: ${String.format(Locale.getDefault(), "%.1f", freeGb)} / " +
+            "${String.format(Locale.getDefault(), "%.1f", totalGb)} GB\n" +
+            "الرام المتاحة: ${availableMb.toInt()} MB"
+    }
+
+    private fun focusSummary(): String {
+        val history = session.history()
+        val lines = history.take(3).joinToString("\n") {
+            "• ${it.first}: ${it.second} دقيقة / ${it.third} تطبيق"
+        }
+        return "جلسات اليوم: ${session.sessionsToday()}\n" +
+            "دقائق التركيز اليوم: ${session.focusMinutesToday()}\n" +
+            if (lines.isEmpty()) "لا يوجد سجل بعد" else "آخر الجلسات:\n$lines"
+    }
+
+    private fun labelFor(packageName: String): String =
+        allApps.firstOrNull { it.packageName == packageName }?.label ?: try {
+            val info = packageManager.getApplicationInfo(packageName, 0)
+            info.loadLabel(packageManager).toString()
+        } catch (_: Exception) {
+            packageName
+        }
+
+    private fun formatDuration(millis: Long): String {
+        val minutes = millis / 60_000L
+        return if (minutes >= 60) "${minutes / 60}س ${minutes % 60}د" else "$minutes د"
     }
 
     private fun formatTime(millis: Long): String {
