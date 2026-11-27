@@ -14,13 +14,7 @@ class SessionManager(context: Context) {
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     val ownerName: String
-        get() = sp.getString(Prefs.KEY_OWNER, "عاصم") ?: "عاصم"
-
-    val isPremium: Boolean
-        get() = sp.getBoolean(Prefs.KEY_PREMIUM, false)
-
-    val maxMinutes: Int
-        get() = if (isPremium) 24 * 60 else 6 * 60
+        get() = appContext.getString(R.string.owner_name)
 
     val strictMode: Boolean
         get() = sp.getBoolean(Prefs.KEY_STRICT_MODE, false)
@@ -78,8 +72,6 @@ class SessionManager(context: Context) {
     fun start(durationMinutes: Int, packages: Set<String>): StartResult {
         if (isActive()) return StartResult.AlreadyRunning
         if (durationMinutes <= 0) return StartResult.InvalidDuration
-        if (durationMinutes > maxMinutes) return StartResult.LimitExceeded
-        if (!isPremium && todayCount() >= FREE_DAILY_LIMIT) return StartResult.DailyLimitReached
         if (!strictMode && packages.isEmpty()) return StartResult.NoAppsSelected
 
         val now = System.currentTimeMillis()
@@ -104,17 +96,6 @@ class SessionManager(context: Context) {
         }
         clearSessionOnly()
         appContext.sendBroadcast(Intent(BlockingActivity.ACTION_CLOSE))
-    }
-
-    fun redeem(code: String): Boolean {
-        if (code.trim() == PROMO_CODE) {
-            sp.edit()
-                .putBoolean(Prefs.KEY_PREMIUM, true)
-                .putString(Prefs.KEY_OWNER, "عاصم")
-                .apply()
-            return true
-        }
-        return false
     }
 
     fun setSchedule(startMin: Int, endMin: Int) {
@@ -207,13 +188,6 @@ class SessionManager(context: Context) {
         object Success : StartResult()
         object AlreadyRunning : StartResult()
         object InvalidDuration : StartResult()
-        object LimitExceeded : StartResult()
-        object DailyLimitReached : StartResult()
         object NoAppsSelected : StartResult()
-    }
-
-    companion object {
-        const val PROMO_CODE = "gdNeooYe8"
-        const val FREE_DAILY_LIMIT = 4
     }
 }
