@@ -286,7 +286,7 @@ class MainViewModel(
                         .toSet()
                 )
             )
-            repository.updateSettings { copy(lastDetectorPackage = pkg.trim()) }
+            repository.updateSettings { it.copy(lastDetectorPackage = pkg.trim()) }
             _message.emit(context.getString(R.string.detector_saved))
         }
 
@@ -302,16 +302,16 @@ class MainViewModel(
 
     fun addException(pkg: String) = viewModelScope.launch(Dispatchers.IO) {
         if (pkg.isBlank()) return@launch
-        repository.updateSettings { copy(userExceptions = userExceptions + pkg.trim()) }
+        repository.updateSettings { it.copy(userExceptions = it.userExceptions + pkg.trim()) }
         _message.emit(context.getString(R.string.exception_saved))
     }
 
     fun removeException(pkg: String) = viewModelScope.launch(Dispatchers.IO) {
-        repository.updateSettings { copy(userExceptions = userExceptions - pkg) }
+        repository.updateSettings { it.copy(userExceptions = it.userExceptions - pkg) }
     }
 
     fun finishOnboarding() = viewModelScope.launch(Dispatchers.IO) {
-        repository.updateSettings { copy(onboardingDone = true) }
+        repository.updateSettings { it.copy(onboardingDone = true) }
     }
 
     fun updateSettings(
