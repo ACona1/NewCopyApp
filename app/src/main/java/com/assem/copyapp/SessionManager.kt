@@ -163,10 +163,13 @@ class SessionManager(context: Context) {
         sp.edit()
             .putInt(Prefs.KEY_FOCUS_MINUTES, sp.getInt(Prefs.KEY_FOCUS_MINUTES, 0) + minutes)
             .apply()
-        val entry = "${today()}|$minutes|${blockedPackages().size}"
+        val entry = Triple(today(), minutes, blockedPackages().size)
         val items = history().toMutableList()
         items.add(0, entry)
-        sp.edit().putString(Prefs.KEY_HISTORY, items.take(5).joinToString(";")).apply()
+        sp.edit().putString(
+            Prefs.KEY_HISTORY,
+            items.take(5).joinToString(";") { "${it.first}|${it.second}|${it.third}" }
+        ).apply()
     }
 
     private fun essentialPackages(): Set<String> {
