@@ -1,6 +1,7 @@
 package com.assem.copyapp
 
 import android.accessibilityservice.AccessibilityService
+import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -16,6 +17,7 @@ class AppBlockingAccessibilityService : AccessibilityService() {
     private lateinit var session: SessionManager
     private val handler = Handler(Looper.getMainLooper())
     private var lockActive = false
+    private var lastBlockedPackage: String? = null
     private var receiverRegistered = false
 
     private val checker = object : Runnable {
@@ -24,6 +26,7 @@ class AppBlockingAccessibilityService : AccessibilityService() {
                 if (!session.isActive()) {
                     if (lockActive) {
                         lockActive = false
+                        lastBlockedPackage = null
                         sendBroadcast(Intent(BlockingActivity.ACTION_CLOSE))
                     }
                 } else {
@@ -40,6 +43,7 @@ class AppBlockingAccessibilityService : AccessibilityService() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == BlockingActivity.ACTION_CLOSE) {
                 lockActive = false
+                lastBlockedPackage = null
             }
         }
     }
@@ -54,6 +58,21 @@ class AppBlockingAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val pkg = event.packageName?.toString() ?: return
+        val className = event.className?.toString().orEmpty()
+
+        if (
+            pkg == "com.android.systemui" &&
+            className.contains("Recents", ignoreCase = true) &&
+            session.isActive() &&
+            lastBlockedPackage != null
+        ) {
+            val blocked = lastBlockedPackage ?: return
+            killApp(blocked)
+            performGlobalAction(GLOBAL_ACTION_HOME)
+            handler.postDelayed({ showBlockingUi(blocked) }, 200L)
+            return
+        }
+
         evaluate(pkg)
     }
 
@@ -88,15 +107,16 @@ class AppBlockingAccessibilityService : AccessibilityService() {
 
     private fun evaluate(packageName: String) {
         if (packageName == this.packageName) return
-        if (session.isBlocked(packageName)) {
-            showBlockingUi(packageName)
-        }
+        if (session.isBlocked(packageName)) showBlockingUi(packageName)
     }
 
     private fun showBlockingUi(packageName: String) {
         if (rootInActiveWindow?.packageName?.toString() == this.packageName) return
 
         lockActive = true
+        lastBlockedPackage = packageName
+        killApp(packageName)
+
         val intent = Intent(this, BlockingActivity::class.java).apply {
             addFlags(
                 Intent.FLAG_ACTIVITY_NEW_TASK or
@@ -110,6 +130,22 @@ class AppBlockingAccessibilityService : AccessibilityService() {
             startActivity(intent)
         } catch (_: Exception) {
             lockActive = false
+        }
+    }
+
+    private fun killApp(packageName: String) {
+        try {
+            val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            activityManager.killBackgroundProcesses(packageName)
+            for (task in activityManager.appTasks) {
+                try {
+                    val taskPackage = task.taskInfo?.topActivity?.packageName
+                        ?: task.taskInfo?.baseIntent?.component?.packageName
+                    if (taskPackage == packageName) task.finishAndRemoveTask()
+                } catch (_: Exception) {
+                }
+            }
+        } catch (_: Exception) {
         }
     }
 
