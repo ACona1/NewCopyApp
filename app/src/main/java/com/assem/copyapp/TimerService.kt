@@ -19,7 +19,7 @@ class TimerService : Service() {
     private val ticker = object : Runnable {
         override fun run() {
             val manager = SessionManager(this@TimerService)
-            if (!manager.isActive()) {
+            if (manager.finalizeExpired() || !manager.isActive()) {
                 sendBroadcast(Intent(BlockingActivity.ACTION_CLOSE))
                 notifySessionFinished()
                 stopForeground(STOP_FOREGROUND_REMOVE)
