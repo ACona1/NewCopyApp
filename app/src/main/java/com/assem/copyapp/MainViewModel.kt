@@ -314,8 +314,11 @@ class MainViewModel(
         repository.updateSettings { copy(onboardingDone = true) }
     }
 
-    fun updateSettings(transform: (com.assem.copyapp.data.AppSettings) -> com.assem.copyapp.data.AppSettings) =
-        viewModelScope.launch(Dispatchers.IO) { repository.updateSettings(transform) }
+    fun updateSettings(
+        transform: com.assem.copyapp.data.AppSettings.() -> com.assem.copyapp.data.AppSettings
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        repository.updateSettings { settings -> settings.transform() }
+    }
 
     fun setFriendKey(code: String) = viewModelScope.launch(Dispatchers.IO) {
         repository.settings.setFriendKey(code)
