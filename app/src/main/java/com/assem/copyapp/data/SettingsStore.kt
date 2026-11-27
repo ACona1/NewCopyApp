@@ -104,7 +104,7 @@ private fun AppSettings.writeTo(prefs: MutablePreferences) {
     prefs[PREF_LAST_DETECTOR_PACKAGE] = lastDetectorPackage
 }
 
-class SettingsStore(context: Context) {
+class SettingsStore(private val context: Context) {
 
     val flow: Flow<AppSettings> = context.appSettingsDataStore.data
         .catch { error ->
@@ -127,8 +127,8 @@ class SettingsStore(context: Context) {
                 .digest(code.trim().toByteArray(Charsets.UTF_8))
                 .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte.toInt() and 0xff) }
         }
-        context.appSettingsDataStore.updateData { preferences ->
-            preferences.toBuilder().apply { this[PREF_FRIEND_KEY_HASH] = hash }.build()
+        context.appSettingsDataStore.edit { preferences ->
+            preferences[PREF_FRIEND_KEY_HASH] = hash
         }
     }
 
