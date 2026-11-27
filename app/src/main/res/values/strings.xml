@@ -98,4 +98,111 @@
     <string name="notification_remaining">المتبقي: %1$s</string>
     <string name="notification_done_title">انتهت جلسة التركيز</string>
     <string name="notification_done_text">تم فتح التطبيقات المحظورة بشكل طبيعي.</string>
+
+    <string name="tab_focus">تركيز</string>
+    <string name="tab_rules">قواعد</string>
+    <string name="tab_insights">رؤى</string>
+    <string name="tab_settings">إعدادات</string>
+    <string name="mode_soft">مرن</string>
+    <string name="mode_hard">صعب</string>
+    <string name="mode_line">الوضع: %1$s</string>
+    <string name="minute_short">د</string>
+    <string name="hard_mode_locked">الوضع الصعب مقفول: لازم الوقت أو مفتاح الصديق</string>
+    <string name="hard_mode_short">وضع صعب</string>
+    <string name="hard_mode_blocking_note">الوضع الصعب: مفيش خروج استثنائي. استنى انتهاء الوقت أو استخدم مفتاح الصديق.</string>
+
+    <string name="perm_accessibility">الحظر</string>
+    <string name="perm_usage">الإحصاءات</string>
+    <string name="perm_notifications">الإشعارات</string>
+    <string name="perm_battery">البطارية</string>
+
+    <string name="soft_break_title">إنهاء الجلسة (احتكاك)</string>
+    <string name="soft_break_message">هتسجّل ككسر للجلسة. انتظر %1$d ثانية ثم أكّد.</string>
+    <string name="soft_break_confirm">تأكيد الإنهاء</string>
+
+    <string name="rules_card">القواعد والمكافحة</string>
+    <string name="package_hint">اسم الحزمة (package)</string>
+    <string name="section_hint">القسم (مثال: reels)</string>
+    <string name="save_rule">حفظ القاعدة</string>
+    <string name="rule_saved">تم حفظ القاعدة</string>
+    <string name="rule_deleted">تم حذف القاعدة</string>
+    <string name="delete">حذف</string>
+    <string name="detectors_card">كاشف الأقسام (Inspector)</string>
+    <string name="detector_note">مفيش معرّفات مخترعة. القيم دي بتتسجل من حالة الشاشة الفعلية اللي بيقرأها Accessibility.</string>
+    <string name="detector_wait">افتح التطبيق المستهدف وارجع هنا عشان يظهر وصف العقدة.</string>
+    <string name="markers_hint">علامات مفصولة بفاصلة (اختياري)</string>
+    <string name="save_detector">حفظ الكاشف</string>
+    <string name="detector_saved">تم حفظ الكاشف</string>
+    <string name="detector_deleted">تم حذف الكاشف</string>
+    <string name="budgets_card">ميزانية يومية</string>
+    <string name="save_limit">حفظ الميزانية</string>
+    <string name="limit_saved">تم حفظ الميزانية</string>
+    <string name="exceptions_card">استثناءات مسموحة</string>
+    <string name="add">إضافة</string>
+    <string name="exception_saved">تمت إضافة الاستثناء</string>
+
+    <string name="score_card">درجة التعفن</string>
+    <string name="score_safe">آمن نسبيًا</string>
+    <string name="score_medium">متوسط</string>
+    <string name="score_high">خطر</string>
+    <string name="score_unknown">غير معروف</string>
+    <string name="streak_card">سلسلة الأيام</string>
+    <string name="streak_days">%1$d يوم متتالي</string>
+    <string name="usage_card">زمن الشاشة</string>
+    <string name="counts_card">عدّاد يدوي</string>
+    <string name="count_reels">ريلز</string>
+    <string name="count_shorts">شورتس</string>
+    <string name="count_feed">سكرول</string>
+    <string name="count_saved">تم التسجيل</string>
+    <string name="digest_card">ملخص يومي</string>
+    <string name="digest_hint">فعّل الملخص من الإعدادات هيطلع إشعار مرة يوميًا بالدرجة.</string>
+
+    <string name="general_card">عام</string>
+    <string name="language_system">النظام</string>
+    <string name="language_ar">العربية</string>
+    <string name="language_en">English</string>
+    <string name="replay_onboarding">إعادة جولة التعريف</string>
+    <string name="session_defaults_card">إعدادات الجلسة الافتراضية</string>
+    <string name="settings_locked_hint">أثناء الجلسة الإعدادات للقراءة فقط.</string>
+    <string name="friend_key_card">مفتاح الصديق</string>
+    <string name="friend_key_hint">كلمة المرور للخروج من الوضع الصعب</string>
+    <string name="save_friend_key">حفظ المفتاح</string>
+    <string name="clear_friend_key">إزالة المفتاح</string>
+    <string name="friend_key_saved">تم حفظ المفتاح</string>
+    <string name="friend_key_note">بيتحفظ كـ SHA-256 فقط، مش كنص صريح.</string>
+    <string name="friend_key_wrong">المفتاح غلط</string>
+    <string name="friend_key_unlock">فتح بالمفتاح</string>
+    <string name="wind_down_card">تهدئة المساء</string>
+    <string name="wind_down_enable">تفعيل التهدئة والنوم</string>
+    <string name="wind_down_start">بداية التهدئة (دقيقة اليوم)</string>
+    <string name="bedtime_start">بداية وقت النوم (دقيقة اليوم)</string>
+    <string name="backup_card">النسخ والملخص</string>
+    <string name="digest_enable">ملخص يومي</string>
+    <string name="export_json">تصدير JSON (نسخ)</string>
+    <string name="import_hint">الصق JSON للاستيراد</string>
+    <string name="import_json">استيراد</string>
+    <string name="import_ok">تم الاستيراد بنجاح</string>
+    <string name="import_failed">فشل الاستيراد</string>
+    <string name="about_card">عن التطبيق</string>
+    <string name="local_only_note">كل البيانات محلية على الجهاز. مفيش سيرفر ولا إعلانات ولا تحليلات.</string>
+
+    <string name="onboarding_title">نسخه جديد — نظام مكافحة التعفن</string>
+    <string name="onboarding_body">هيساعدك تقلّل السكرولينج والسهر. كل حاجة بتحصل على جوالك، ومفيش أي اتصال بالإنترنت.</string>
+    <string name="onboarding_mode_note">المرن فيه احتكاك قبل الإنهاء. الصعب ملوش خروج استثنائي غير الوقت أو مفتاح صديق.</string>
+    <string name="onboarding_start">ابدأ</string>
+
+    <string name="reason_session">التطبيق محظور في جلسة التركيز.</string>
+    <string name="reason_strict">الوضع الشديد يسمح بالهاتف والرسائل فقط.</string>
+    <string name="reason_budget">انتهت الميزانية اليومية لهذا التطبيق.</string>
+    <string name="reason_schedule">قاعدة الجدول نشطة الآن.</string>
+    <string name="reason_wind_down">وقت التهدئة المسائية.</string>
+    <string name="reason_bedtime">وقت النوم.</string>
+    <string name="default_profile">الملف الافتراضي</string>
+
+    <string name="tile_active">جلسة شغّالة</string>
+    <string name="tile_start">ابدأ تركيز</string>
+    <string name="tile_description">تبديل جلسة تركيز نسخه جديد</string>
+    <string name="digest_channel">الملخص اليومي</string>
+    <string name="digest_title">ملخص يومك</string>
+    <string name="digest_text">درجة التعفن اليوم: %1$d / 100</string>
 </resources>
