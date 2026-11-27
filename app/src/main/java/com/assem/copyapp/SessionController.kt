@@ -96,7 +96,7 @@ class SessionController(
     }
 
     suspend fun pauseFor(seconds: Int) {
-        repository.updateSession { copy(pauseUntilMono = clockGuard.nowMono() + seconds * 1000L) }
+        repository.updateSession { it.copy(pauseUntilMono = clockGuard.nowMono() + seconds * 1000L) }
     }
 
     suspend fun restoreAfterBoot() {
@@ -109,7 +109,7 @@ class SessionController(
         }
         val remainingWall = state.endWall - nowWall
         repository.updateSession {
-            copy(
+            it.copy(
                 startMono = clockGuard.nowMono() - remainingWall,
                 wallTrusted = false
             )
