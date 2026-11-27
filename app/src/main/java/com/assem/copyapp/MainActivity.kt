@@ -7,10 +7,9 @@ import android.app.AppOpsManager
 import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.app.usage.UsageStatsManager
-import android.content.ComponentName
 import android.content.Context
-import android.content.IntentFilter
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -54,10 +53,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
     private lateinit var timerText: TextView
     private lateinit var progressBar: ProgressBar
-    private lateinit var planChip: TextView
     private lateinit var permissionText: TextView
     private lateinit var scheduleText: TextView
-    private lateinit var premiumStatusText: TextView
     private lateinit var usageText: TextView
     private lateinit var deviceText: TextView
     private lateinit var statsText: TextView
@@ -90,26 +87,20 @@ class MainActivity : AppCompatActivity() {
             setPadding(dp(20), dp(24), dp(20), dp(32))
         }
 
-        planChip = chip("مجاني", R.color.surface_2)
         val title = TextView(this).apply {
-            text = "نسخه جديد"
+            text = getString(R.string.app_name)
             textSize = 27f
             setTypeface(typeface, Typeface.BOLD)
             setTextColor(color(R.color.text))
         }
-        root.addView(
-            LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, 0, 0, dp(18))
-                addView(title, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-                addView(planChip)
-            }
-        )
+        root.addView(title, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { setMargins(0, 0, 0, dp(18)) })
 
-        val dash = card("الحالة الحالية")
+        val dash = card(getString(R.string.status_card))
         timerText = TextView(this).apply {
-            text = "لا توجد جلسة نشطة"
+            text = getString(R.string.no_active_session)
             textSize = 30f
             setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
             setTextColor(color(R.color.text))
@@ -127,19 +118,19 @@ class MainActivity : AppCompatActivity() {
         dash.addView(statusText)
         dash.addView(
             buttonRow(
-                actionButton("بدء جلسة تركيز", R.color.primary) { startFocusSession() },
-                actionButton("إنهاء الجلسة", R.color.surface_2) { stopSession() }
+                actionButton(getString(R.string.start_focus), R.color.primary) { startFocusSession() },
+                actionButton(getString(R.string.end_session), R.color.surface_2) { stopSession() }
             )
         )
         strictCheck = CheckBox(this).apply {
-            text = "وضع التركيز الشديد (حظر كل التطبيقات إلا الهاتف والرسائل)"
+            text = getString(R.string.strict_mode_label)
             textSize = 13f
             setTextColor(color(R.color.muted))
             buttonTintList = ColorStateList.valueOf(color(R.color.primary))
             isChecked = session.strictMode
             setOnClickListener {
                 session.setStrictMode(isChecked)
-                toast(if (isChecked) "تم تفعيل الوضع الشديد" else "تم إيقاف الوضع الشديد")
+                toast(getString(if (isChecked) R.string.strict_enabled else R.string.strict_disabled))
             }
         }
         dash.addView(
@@ -151,28 +142,22 @@ class MainActivity : AppCompatActivity() {
         )
         root.addView(dash)
 
-        val permCard = card("الصلاحيات")
+        val permCard = card(getString(R.string.permissions_card))
         permissionText = body("—")
         permCard.addView(permissionText)
-        val reviewButton = actionButton("مراجعة الصلاحيات", R.color.surface_2) { requestAllPermissions() }
+        val reviewButton = actionButton(getString(R.string.review_permissions), R.color.surface_2) {
+            requestAllPermissions()
+        }
         reviewButton.layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply { setMargins(0, dp(10), 0, 0) }
         permCard.addView(reviewButton)
-        val adminButton = actionButton("تفعيل حماية الجهاز (Device Admin)", R.color.surface_2) {
-            requestDeviceAdmin()
-        }
-        adminButton.layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(0, dp(6), 0, 0) }
-        permCard.addView(adminButton)
         root.addView(permCard)
 
-        val appsCard = card("التطبيقات المحظورة")
+        val appsCard = card(getString(R.string.blocked_apps_card))
         searchInput = EditText(this).apply {
-            hint = "ابحث عن تطبيق…"
+            hint = getString(R.string.search_hint)
             inputType = InputType.TYPE_CLASS_TEXT
             setTextColor(color(R.color.text))
             setHintTextColor(color(R.color.muted))
@@ -188,10 +173,10 @@ class MainActivity : AppCompatActivity() {
         )
         appsCard.addView(
             buttonRow(
-                actionButton("تحديد الكل", R.color.surface_2) {
+                actionButton(getString(R.string.select_all), R.color.surface_2) {
                     appChecks.values.forEach { it.isChecked = true }
                 },
-                actionButton("إلغاء الكل", R.color.surface_2) {
+                actionButton(getString(R.string.clear_all), R.color.surface_2) {
                     appChecks.values.forEach { it.isChecked = false }
                 }
             )
@@ -218,9 +203,9 @@ class MainActivity : AppCompatActivity() {
         })
         root.addView(appsCard)
 
-        val durationCard = card("مدة الجلسة")
+        val durationCard = card(getString(R.string.duration_card))
         durationInput = EditText(this).apply {
-            hint = "بالدقائق"
+            hint = getString(R.string.minutes_hint)
             inputType = InputType.TYPE_CLASS_NUMBER
             setText("30")
             setTextColor(color(R.color.text))
@@ -237,24 +222,24 @@ class MainActivity : AppCompatActivity() {
         durationCard.addView(
             withTopMargin(
                 buttonRow(
-                    actionButton("15 د", R.color.surface_2) { durationInput.setText("15") },
-                    actionButton("30 د", R.color.surface_2) { durationInput.setText("30") },
-                    actionButton("60 د", R.color.surface_2) { durationInput.setText("60") },
-                    actionButton("120 د", R.color.surface_2) { durationInput.setText("120") }
+                    actionButton(getString(R.string.duration_15), R.color.surface_2) { durationInput.setText("15") },
+                    actionButton(getString(R.string.duration_30), R.color.surface_2) { durationInput.setText("30") },
+                    actionButton(getString(R.string.duration_60), R.color.surface_2) { durationInput.setText("60") },
+                    actionButton(getString(R.string.duration_120), R.color.surface_2) { durationInput.setText("120") }
                 ),
                 dp(8)
             )
         )
         root.addView(durationCard)
 
-        val scheduleCard = card("الجدول اليومي")
-        scheduleText = body("الجدول: غير مفعّل")
+        val scheduleCard = card(getString(R.string.schedule_card))
+        scheduleText = body(getString(R.string.schedule_off))
         scheduleCard.addView(scheduleText)
         scheduleCard.addView(
             withTopMargin(
                 buttonRow(
-                    actionButton("وقت البداية", R.color.surface_2) { pickScheduleTime(true) },
-                    actionButton("وقت النهاية", R.color.surface_2) { pickScheduleTime(false) }
+                    actionButton(getString(R.string.start_time), R.color.surface_2) { pickScheduleTime(true) },
+                    actionButton(getString(R.string.end_time), R.color.surface_2) { pickScheduleTime(false) }
                 ),
                 dp(8)
             )
@@ -262,50 +247,18 @@ class MainActivity : AppCompatActivity() {
         scheduleCard.addView(
             withTopMargin(
                 buttonRow(
-                    actionButton("تفعيل الجدول", R.color.primary) { activateSchedule() },
-                    actionButton("إلغاء الجدول", R.color.surface_2) { clearSchedule() }
+                    actionButton(getString(R.string.activate_schedule), R.color.primary) { activateSchedule() },
+                    actionButton(getString(R.string.cancel_schedule), R.color.surface_2) { clearSchedule() }
                 ),
                 dp(6)
             )
         )
         root.addView(scheduleCard)
 
-        val premiumCard = card("Premium")
-        premiumStatusText = body("—")
-        premiumCard.addView(premiumStatusText)
-        val codeInput = EditText(this).apply {
-            hint = "كود الخصم"
-            setTextColor(color(R.color.text))
-            setHintTextColor(color(R.color.muted))
-            background = rounded(R.color.surface_2, 12)
-            setPadding(dp(12), dp(10), dp(12), dp(10))
-        }
-        premiumCard.addView(
-            codeInput,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { setMargins(0, dp(10), 0, 0) }
-        )
-        val redeemButton = actionButton("تفعيل الكود", R.color.accent) {
-            if (session.redeem(codeInput.text.toString())) {
-                updateStatus()
-                toast("تم تفعيل Premium — ${session.ownerName}")
-            } else {
-                toast("الكود غير صحيح")
-            }
-        }
-        redeemButton.layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(0, dp(6), 0, 0) }
-        premiumCard.addView(redeemButton)
-        root.addView(premiumCard)
-
-        val cleanCard = card("نظافة الجهاز والأداء")
+        val cleanCard = card(getString(R.string.cleanup_card))
         usageText = body("—")
         cleanCard.addView(usageText)
-        val usageButton = actionButton("إحصاءات الاستخدام والصلاحية", R.color.surface_2) {
+        val usageButton = actionButton(getString(R.string.usage_stats_button), R.color.surface_2) {
             showUsageInfo()
         }
         usageButton.layoutParams = LinearLayout.LayoutParams(
@@ -313,7 +266,7 @@ class MainActivity : AppCompatActivity() {
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply { setMargins(0, dp(8), 0, 0) }
         cleanCard.addView(usageButton)
-        val cleanButton = actionButton("تنظيف التطبيقات في الخلفية", R.color.primary) {
+        val cleanButton = actionButton(getString(R.string.cleanup_button), R.color.primary) {
             showCleanupDialog()
         }
         cleanButton.layoutParams = LinearLayout.LayoutParams(
@@ -323,18 +276,18 @@ class MainActivity : AppCompatActivity() {
         cleanCard.addView(cleanButton)
         root.addView(cleanCard)
 
-        val deviceCard = card("معلومات الجهاز")
+        val deviceCard = card(getString(R.string.device_card))
         deviceText = body("—")
         deviceCard.addView(deviceText)
         root.addView(deviceCard)
 
-        val statsCard = card("إحصاءات التركيز")
+        val statsCard = card(getString(R.string.focus_stats_card))
         statsText = body("—")
         statsCard.addView(statsText)
         root.addView(statsCard)
 
         root.addView(
-            body("نسخه جديد · إصدار 1.2 · حظر كامل + تنظيف الخلفية", R.color.muted, 12f)
+            body(getString(R.string.version_line), R.color.muted, 12f)
                 .apply { gravity = Gravity.CENTER; setPadding(0, dp(20), 0, 0) }
         )
 
@@ -349,32 +302,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStatus() {
         val active = session.isActive()
-        val premium = session.isPremium
 
-        planChip.text = if (premium) "Premium" else "مجاني"
-        planChip.background = rounded(if (premium) R.color.accent else R.color.surface_2, 999)
-        planChip.setTextColor(color(if (premium) R.color.bg else R.color.muted))
-
-        timerText.text = if (active) formatTime(session.remainingMillis()) else "لا توجد جلسة نشطة"
+        timerText.text = if (active) formatTime(session.remainingMillis()) else getString(R.string.no_active_session)
         progressBar.progress = if (active) session.progressPercent() else 0
 
-        val plan = if (premium) "Premium" else "مجانية"
-        val limit = if (premium) "24 ساعة / جلسات غير محدودة" else "6 ساعات / 4 جلسات يوميًا"
-        statusText.text = "المالك: ${session.ownerName}\nالخطة: $plan\nالحد: $limit\nعدد التطبيقات المحظورة: ${session.blockedPackages().size}"
+        statusText.text = getString(R.string.owner_line, session.ownerName) + "\n" +
+            getString(R.string.blocked_count_line, session.blockedPackages().size)
 
         permissionText.text = permissionSummary()
 
         val (start, end) = session.schedule()
         scheduleText.text = if (start >= 0 && end > start) {
-            "الجدول: ${formatMinute(start)} — ${formatMinute(end)}"
+            getString(R.string.schedule_range, formatMinute(start), formatMinute(end))
         } else {
-            "الجدول: غير مفعّل"
-        }
-
-        premiumStatusText.text = if (premium) {
-            "Premium مفعّل ✅ — المالك: ${session.ownerName}"
-        } else {
-            "الخطة المجانية — أدخل الكود لتفعيل Premium"
+            getString(R.string.schedule_off)
         }
 
         strictCheck.isChecked = session.strictMode
@@ -447,7 +388,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun startFocusSession() {
         if (!isAccessibilityEnabled()) {
-            toast("فعّل خدمة الحظر من قسم الصلاحيات أولًا")
+            toast(getString(R.string.enable_accessibility_first))
             return
         }
         val minutes = durationInput.text.toString().trim().toIntOrNull() ?: 30
@@ -458,13 +399,11 @@ class MainActivity : AppCompatActivity() {
                     this,
                     Intent(this, TimerService::class.java)
                 )
-                "بدأت الجلسة لمدة $minutes دقيقة"
+                getString(R.string.session_started, minutes)
             }
-            SessionManager.StartResult.AlreadyRunning -> "توجد جلسة نشطة بالفعل"
-            SessionManager.StartResult.InvalidDuration -> "المدة غير صالحة"
-            SessionManager.StartResult.LimitExceeded -> "الحد الأقصى ${session.maxMinutes / 60} ساعة"
-            SessionManager.StartResult.DailyLimitReached -> "استهلكت الحد اليومي للخطة المجانية"
-            SessionManager.StartResult.NoAppsSelected -> "اختر تطبيقًا واحدًا على الأقل"
+            SessionManager.StartResult.AlreadyRunning -> getString(R.string.already_running)
+            SessionManager.StartResult.InvalidDuration -> getString(R.string.invalid_duration)
+            SessionManager.StartResult.NoAppsSelected -> getString(R.string.no_apps_selected)
         }
         toast(message)
         updateStatus()
@@ -473,7 +412,7 @@ class MainActivity : AppCompatActivity() {
     private fun stopSession() {
         session.stop()
         updateStatus()
-        toast("تم إنهاء الجلسة")
+        toast(getString(R.string.session_stopped))
     }
 
     private fun requestAllPermissions() {
@@ -500,37 +439,24 @@ class MainActivity : AppCompatActivity() {
                 )
             )
         }
-        toast("فعّل الخدمة وارجع إلى التطبيق")
-    }
-
-    private fun requestDeviceAdmin() {
-        val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as android.app.admin.DevicePolicyManager
-        val component = ComponentName(this, AdminReceiver::class.java)
-        if (dpm.isAdminActive(component)) {
-            toast("حماية الجهاز مفعّلة بالفعل")
-            return
-        }
-        startActivity(
-            Intent(android.app.admin.DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-                putExtra(android.app.admin.DevicePolicyManager.EXTRA_DEVICE_ADMIN, component)
-                putExtra(
-                    android.app.admin.DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                    "تساعد على إبقاء حظر التطبيقات نشطًا أثناء جلسة التركيز."
-                )
-            }
-        )
+        toast(getString(R.string.permissions_hint))
     }
 
     private fun permissionSummary(): String {
-        val accessibility = if (isAccessibilityEnabled()) "✅" else "❌"
+        val accessibility = if (isAccessibilityEnabled()) R.string.perm_on else R.string.perm_off
         val notifications = if (
             Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        ) "✅" else "❌"
-        val battery = if (isIgnoringBatteryOptimization()) "✅" else "❌"
-        val usage = if (hasUsageStatsAccess()) "✅" else "❌"
-        val deviceAdmin = if (isAdminActive()) "✅" else "❌"
-        return "الحظر $accessibility   |   الإحصاءات $usage   |   الإشعارات $notifications\nالبطارية $battery   |   الحماية $deviceAdmin"
+        ) R.string.perm_on else R.string.perm_off
+        val battery = if (isIgnoringBatteryOptimization()) R.string.perm_on else R.string.perm_off
+        val usage = if (hasUsageStatsAccess()) R.string.perm_on else R.string.perm_off
+        return getString(
+            R.string.permission_summary,
+            getString(accessibility),
+            getString(usage),
+            getString(notifications),
+            getString(battery)
+        )
     }
 
     private fun isAccessibilityEnabled(): Boolean {
@@ -554,11 +480,6 @@ class MainActivity : AppCompatActivity() {
         return pm.isIgnoringBatteryOptimizations(packageName)
     }
 
-    private fun isAdminActive(): Boolean {
-        val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as android.app.admin.DevicePolicyManager
-        return dpm.isAdminActive(ComponentName(this, AdminReceiver::class.java))
-    }
-
     private fun pickScheduleTime(isStart: Boolean) {
         val now = Calendar.getInstance()
         val (start, end) = session.schedule()
@@ -579,7 +500,7 @@ class MainActivity : AppCompatActivity() {
                 session.setSchedule(newStart, newEnd)
                 scheduleDaily(newStart)
                 updateStatus()
-                toast("تم حفظ الجدول")
+                toast(getString(R.string.schedule_saved))
             },
             initialHour,
             initialMinute,
@@ -590,11 +511,11 @@ class MainActivity : AppCompatActivity() {
     private fun activateSchedule() {
         val (start, end) = session.schedule()
         if (start < 0 || end <= start) {
-            toast("اختر وقت البداية ووقت النهاية أولًا")
+            toast(getString(R.string.schedule_pick_times))
             return
         }
         if (!isAccessibilityEnabled()) {
-            toast("فعّل خدمة الحظر أولًا")
+            toast(getString(R.string.enable_blocking_first))
             return
         }
         scheduleDaily(start)
@@ -607,12 +528,12 @@ class MainActivity : AppCompatActivity() {
                     this,
                     Intent(this, TimerService::class.java)
                 )
-                toast("تم تطبيق الجدول وبدء الجلسة")
+                toast(getString(R.string.schedule_applied))
             } else {
-                toast("تعذّر بدء الجلسة: $result")
+                toast(getString(R.string.schedule_cannot_start, result.toString()))
             }
         } else {
-            toast("تم تفعيل الجدول، سيبدأ تلقائيًا في الوقت المحدد")
+            toast(getString(R.string.schedule_enabled))
         }
         updateStatus()
     }
@@ -627,7 +548,7 @@ class MainActivity : AppCompatActivity() {
         )
         (getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(pendingIntent)
         updateStatus()
-        toast("تم إلغاء الجدول")
+        toast(getString(R.string.schedule_cancelled))
     }
 
     private fun scheduleDaily(startMin: Int) {
@@ -673,9 +594,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun usageSummary(): String {
-        if (!hasUsageStatsAccess()) {
-            return "إحصاءات الاستخدام غير مفعّلة.\nاضغط الزر أدناه واسمح للتطبيق بقراءة استخدام التطبيقات."
-        }
+        if (!hasUsageStatsAccess()) return getString(R.string.usage_not_enabled)
         val manager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         val from = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
@@ -693,21 +612,21 @@ class MainActivity : AppCompatActivity() {
             .map { (pkg, list) -> pkg to list.sumOf { it.totalTimeInForeground } }
             .filter { (pkg, ms) -> ms > 0 && !session.isEssential(pkg) }
             .sortedByDescending { it.second }
-        if (totals.isEmpty()) return "لا توجد بيانات استخدام لهذا اليوم."
+        if (totals.isEmpty()) return getString(R.string.no_usage_data)
         val total = totals.sumOf { it.second }
         val top = totals.take(4).joinToString("\n") {
             "• ${labelFor(it.first)} — ${formatDuration(it.second)}"
         }
-        return "زمن الشاشة اليوم: ${formatDuration(total)}\n$top"
+        return getString(R.string.screen_time_today, formatDuration(total)) + "\n$top"
     }
 
     private fun showUsageInfo() {
         if (!hasUsageStatsAccess()) {
             startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
-            toast("فعّل إحصاءات الاستخدام ثم ارجع")
+            toast(getString(R.string.usage_enable_hint))
         } else {
             usageText.text = usageSummary()
-            toast("تم تحديث الإحصاءات")
+            toast(getString(R.string.usage_refreshed))
         }
     }
 
@@ -728,16 +647,16 @@ class MainActivity : AppCompatActivity() {
             .distinct()
             .take(10)
         if (processes.isEmpty()) {
-            toast("لا توجد تطبيقات قابلة للتنظيف حاليًا")
+            toast(getString(R.string.cleanup_empty))
             return
         }
         val labels = processes.map { labelFor(it) }.toTypedArray()
         val checked = BooleanArray(processes.size) { true }
         AlertDialog.Builder(this)
-            .setTitle("تنظيف الخلفية")
-            .setMessage("سيتم إيقاف التطبيقات المختارة دون حذف بياناتها.")
+            .setTitle(getString(R.string.cleanup_title))
+            .setMessage(getString(R.string.cleanup_message))
             .setMultiChoiceItems(labels, checked) { _, which, value -> checked[which] = value }
-            .setPositiveButton("تنظيف") { _, _ ->
+            .setPositiveButton(getString(R.string.cleanup_action)) { _, _ ->
                 var count = 0
                 for (index in processes.indices) {
                     if (checked[index]) {
@@ -745,10 +664,10 @@ class MainActivity : AppCompatActivity() {
                         count++
                     }
                 }
-                toast("تم تنظيف $count تطبيق")
+                toast(getString(R.string.cleanup_done, count))
                 updateStatus()
             }
-            .setNegativeButton("إلغاء", null)
+            .setNegativeButton(getString(R.string.cleanup_cancel), null)
             .show()
     }
 
@@ -758,27 +677,32 @@ class MainActivity : AppCompatActivity() {
         val scale = battery?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
         val percent = if (level >= 0 && scale > 0) level * 100 / scale else -1
         val plugged = battery?.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) ?: 0
-        val charging = if (plugged > 0) "يشحن" else "على البطارية"
+        val chargingText = getString(if (plugged > 0) R.string.battery_charging else R.string.battery_discharging)
+        val batteryText = if (percent >= 0) "$percent%" else getString(R.string.battery_unknown)
         val storage = StatFs(Environment.getDataDirectory().path)
         val freeGb = storage.availableBytes / (1024f * 1024f * 1024f)
         val totalGb = storage.totalBytes / (1024f * 1024f * 1024f)
         val memory = ActivityManager.MemoryInfo()
         (getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(memory)
         val availableMb = memory.availMem / (1024f * 1024f)
-        return "البطارية: ${if (percent >= 0) "$percent%" else "غير معروف"} ($charging)\n" +
-            "المساحة المتاحة: ${String.format(Locale.getDefault(), "%.1f", freeGb)} / " +
-            "${String.format(Locale.getDefault(), "%.1f", totalGb)} GB\n" +
-            "الرام المتاحة: ${availableMb.toInt()} MB"
+        return getString(R.string.battery_line, batteryText, chargingText) + "\n" +
+            getString(
+                R.string.storage_line,
+                String.format(Locale.getDefault(), "%.1f", freeGb),
+                String.format(Locale.getDefault(), "%.1f", totalGb)
+            ) + "\n" +
+            getString(R.string.memory_line, availableMb.toInt())
     }
 
     private fun focusSummary(): String {
         val history = session.history()
         val lines = history.take(3).joinToString("\n") {
-            "• ${it.first}: ${it.second} دقيقة / ${it.third} تطبيق"
+            getString(R.string.history_line, it.first, it.second, it.third)
         }
-        return "جلسات اليوم: ${session.sessionsToday()}\n" +
-            "دقائق التركيز اليوم: ${session.focusMinutesToday()}\n" +
-            if (lines.isEmpty()) "لا يوجد سجل بعد" else "آخر الجلسات:\n$lines"
+        return getString(R.string.sessions_today, session.sessionsToday()) + "\n" +
+            getString(R.string.focus_minutes_today, session.focusMinutesToday()) + "\n" +
+            if (lines.isEmpty()) getString(R.string.no_history)
+            else getString(R.string.last_sessions) + "\n$lines"
     }
 
     private fun labelFor(packageName: String): String =
@@ -821,16 +745,6 @@ class MainActivity : AppCompatActivity() {
             this.text = text
             textSize = size
             setTextColor(color(colorRes))
-        }
-
-    private fun chip(text: String, colorRes: Int): TextView =
-        TextView(this).apply {
-            this.text = text
-            textSize = 12f
-            setTypeface(typeface, Typeface.BOLD)
-            setTextColor(color(R.color.muted))
-            background = rounded(colorRes, 999)
-            setPadding(dp(12), dp(6), dp(12), dp(6))
         }
 
     private fun card(title: String): LinearLayout =
