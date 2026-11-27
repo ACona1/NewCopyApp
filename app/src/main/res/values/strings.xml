@@ -1,6 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">نسخه جديد</string>
-    <string name="accessibility_description">خدمة حظر التطبيقات في نسخه جديد. عند فتح تطبيق محظور أثناء جلسة التركيز، تظهر شاشة حظر كاملة تمنع استخدامه حتى انتهاء الجلسة.</string>
+    <string name="owner_name">عاصم</string>
+    <string name="accessibility_description">خدمة حظر التطبيقات في نسخه جديد. عند فتح تطبيق محظور أثناء جلسة التركيز، تظهر شاشة حظر كاملة تمنع استخدامه حتى انتهاء الجلسة. كل البيانات محلية على الجهاز.</string>
     <string name="blocking_title">التطبيق محظور</string>
+
+    <string name="status_card">الحالة الحالية</string>
+    <string name="no_active_session">لا توجد جلسة نشطة</string>
+    <string name="owner_line">المالك: %1$s</string>
+    <string name="blocked_count_line">عدد التطبيقات المحظورة: %1$d</string>
+    <string name="start_focus">ابدأ تركيز</string>
+    <string name="end_session">إنهاء الجلسة</string>
+    <string name="strict_mode_label">وضع التركيز الشديد (حظر كل التطبيقات إلا الهاتف والرسائل)</string>
+    <string name="strict_enabled">تم تفعيل الوضع الشديد</string>
+    <string name="strict_disabled">تم إيقاف الوضع الشديد</string>
+
+    <string name="permissions_card">الصلاحيات</string>
+    <string name="review_permissions">مراجعة الصلاحيات</string>
+    <string name="permission_summary">الحظر %1$s | الإحصاءات %2$s\nالإشعارات %3$s | البطارية %4$s</string>
+    <string name="perm_on">✅</string>
+    <string name="perm_off">❌</string>
+
+    <string name="blocked_apps_card">التطبيقات المحظورة</string>
+    <string name="search_hint">ابحث عن تطبيق…</string>
+    <string name="select_all">تحديد الكل</string>
+    <string name="clear_all">إلغاء الكل</string>
+
+    <string name="duration_card">مدة الجلسة</string>
+    <string name="minutes_hint">بالدقائق</string>
+    <string name="duration_15">15 د</string>
+    <string name="duration_30">30 د</string>
+    <string name="duration_60">60 د</string>
+    <string name="duration_120">120 د</string>
+    <string name="session_started">بدأت الجلسة لمدة %1$d دقيقة</string>
+    <string name="already_running">توجد جلسة نشطة بالفعل</string>
+    <string name="invalid_duration">المدة غير صالحة</string>
+    <string name="no_apps_selected">اختر تطبيقًا واحدًا على الأقل</string>
+    <string name="session_stopped">تم إنهاء الجلسة</string>
+    <string name="enable_accessibility_first">فعّل خدمة الحظر من قسم الصلاحيات أولًا</string>
+    <string name="enable_blocking_first">فعّل خدمة الحظر أولًا</string>
+    <string name="permissions_hint">فعّل الخدمة وارجع إلى التطبيق</string>
+
+    <string name="schedule_card">الجدول اليومي</string>
+    <string name="schedule_off">الجدول: غير مفعّل</string>
+    <string name="schedule_range">الجدول: %1$s — %2$s</string>
+    <string name="start_time">وقت البداية</string>
+    <string name="end_time">وقت النهاية</string>
+    <string name="activate_schedule">تفعيل الجدول</string>
+    <string name="cancel_schedule">إلغاء الجدول</string>
+    <string name="schedule_saved">تم حفظ الجدول</string>
+    <string name="schedule_pick_times">اختر وقت البداية ووقت النهاية أولًا</string>
+    <string name="schedule_applied">تم تطبيق الجدول وبدء الجلسة</string>
+    <string name="schedule_cannot_start">تعذّر بدء الجلسة: %1$s</string>
+    <string name="schedule_enabled">تم تفعيل الجدول، سيبدأ تلقائيًا في الوقت المحدد</string>
+    <string name="schedule_cancelled">تم إلغاء الجدول</string>
+
+    <string name="usage_not_enabled">إحصاءات الاستخدام غير مفعّلة.\nاضغط الزر أدناه واسمح للتطبيق بقراءة استخدام التطبيقات.</string>
+    <string name="no_usage_data">لا توجد بيانات استخدام لهذا اليوم.</string>
+    <string name="screen_time_today">زمن الشاشة اليوم: %1$s</string>
+    <string name="usage_refreshed">تم تحديث الإحصاءات</string>
+    <string name="usage_enable_hint">فعّل إحصاءات الاستخدام ثم ارجع</string>
+    <string name="cleanup_card">نظافة الجهاز والأداء</string>
+    <string name="usage_stats_button">إحصاءات الاستخدام والصلاحية</string>
+    <string name="cleanup_button">تنظيف التطبيقات في الخلفية</string>
+    <string name="cleanup_title">تنظيف الخلفية</string>
+    <string name="cleanup_message">سيتم إيقاف التطبيقات المختارة دون حذف بياناتها.</string>
+    <string name="cleanup_action">تنظيف</string>
+    <string name="cleanup_cancel">إلغاء</string>
+    <string name="cleanup_done">تم تنظيف %1$d تطبيق</string>
+    <string name="cleanup_empty">لا توجد تطبيقات قابلة للتنظيف حاليًا</string>
+
+    <string name="device_card">معلومات الجهاز</string>
+    <string name="battery_line">البطارية: %1$s (%2$s)</string>
+    <string name="battery_unknown">غير معروف</string>
+    <string name="battery_charging">يشحن</string>
+    <string name="battery_discharging">على البطارية</string>
+    <string name="storage_line">المساحة المتاحة: %1$s / %2$s GB</string>
+    <string name="memory_line">الرام المتاحة: %1$d MB</string>
+
+    <string name="focus_stats_card">إحصاءات التركيز</string>
+    <string name="sessions_today">جلسات اليوم: %1$d</string>
+    <string name="focus_minutes_today">دقائق التركيز اليوم: %1$d</string>
+    <string name="last_sessions">آخر الجلسات:</string>
+    <string name="no_history">لا يوجد سجل بعد</string>
+    <string name="history_line">• %1$s: %2$d دقيقة / %3$d تطبيق</string>
+    <string name="version_line">نسخه جديد · إصدار 2.0 · نظام مكافحة التعفن</string>
+
+    <string name="blocking_message">جلسة التركيز نشطة.\nتم إغلاق التطبيق في الخلفية، ولا يمكن استخدامه حتى انتهاء الوقت المحدد.</string>
+    <string name="blocking_home">العودة للشاشة الرئيسية</string>
+    <string name="blocking_emergency">اتصال طوارئ</string>
+    <string name="blocking_stop">إنهاء جلسة التركيز</string>
+    <string name="block_exit_not_allowed">لا يمكن الخروج أثناء جلسة التركيز</string>
+
+    <string name="notification_channel">جلسات التركيز</string>
+    <string name="notification_title">نسخه جديد</string>
+    <string name="notification_active">جلسة تركيز نشطة</string>
+    <string name="notification_remaining">المتبقي: %1$s</string>
+    <string name="notification_done_title">انتهت جلسة التركيز</string>
+    <string name="notification_done_text">تم فتح التطبيقات المحظورة بشكل طبيعي.</string>
 </resources>
