@@ -57,7 +57,7 @@ fun SettingsScreen(vm: MainViewModel) {
                         selected = settings.language == tag,
                         onClick = {
                             val locales = if (tag == "system") LocaleListCompat.getEmptyLocaleList()
-                            else LocaleListCompat.create(Locale.forLanguageTag(tag))
+                            else LocaleListCompat.create(java.util.Locale.forLanguageTag(tag))
                             AppCompatDelegate.setApplicationLocales(locales)
                             vm.updateSettings { copy(language = tag) }
                         },
