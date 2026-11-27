@@ -328,7 +328,7 @@ class AppRepository(
                 db.usageEventDao().insert(eventFromJson(array.getJSONObject(i)))
             }
         }
-        root.optJSONObject("settings")?.let { settings.update { settingsFromJson(it) } }
+        root.optJSONObject("settings")?.let { obj -> settings.update { settingsFromJson(obj) } }
 
         Unit
     }
