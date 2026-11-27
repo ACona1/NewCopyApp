@@ -5,18 +5,28 @@ plugins {
 
 android {
     namespace 'com.assem.copyapp'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId 'com.assem.copyapp'
         minSdk 26
-        targetSdk 34
-        versionCode 3
-        versionName '1.2'
+        targetSdk 35
+        versionCode 4
+        versionName '2.0.0'
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(System.getenv('SIGNING_STORE_FILE') ?: 'release.keystore')
+            storePassword System.getenv('SIGNING_STORE_PASSWORD')
+            keyAlias System.getenv('SIGNING_KEY_ALIAS')
+            keyPassword System.getenv('SIGNING_KEY_PASSWORD')
+        }
     }
 
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
