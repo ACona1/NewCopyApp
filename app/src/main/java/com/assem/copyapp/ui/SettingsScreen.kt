@@ -30,6 +30,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import com.assem.copyapp.MainViewModel
+import java.util.Locale
 import com.assem.copyapp.R
 import com.assem.copyapp.domain.SessionMode
 
@@ -56,7 +57,7 @@ fun SettingsScreen(vm: MainViewModel) {
                         selected = settings.language == tag,
                         onClick = {
                             val locales = if (tag == "system") LocaleListCompat.getEmptyLocaleList()
-                            else LocaleListCompat.forLanguageTag(tag)
+                            else LocaleListCompat.create(Locale.forLanguageTag(tag))
                             AppCompatDelegate.setApplicationLocales(locales)
                             vm.updateSettings { copy(language = tag) }
                         },
