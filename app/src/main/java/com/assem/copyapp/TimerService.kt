@@ -37,7 +37,7 @@ class TimerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICATION_ID, buildNotification("جلسة تركيز نشطة"))
+        startForeground(NOTIFICATION_ID, buildNotification(getString(R.string.notification_active)))
         handler.removeCallbacks(ticker)
         handler.post(ticker)
         return START_STICKY
@@ -52,7 +52,10 @@ class TimerService : Service() {
 
     private fun showNotification(remaining: Long) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID, buildNotification("المتبقي: ${formatTime(remaining)}"))
+        notificationManager.notify(
+            NOTIFICATION_ID,
+            buildNotification(getString(R.string.notification_remaining, formatTime(remaining)))
+        )
     }
 
     private fun buildNotification(text: String): Notification {
@@ -67,7 +70,7 @@ class TimerService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("نسخه جديد")
+            .setContentTitle(getString(R.string.notification_title))
             .setContentText(text)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -88,8 +91,8 @@ class TimerService : Service() {
         )
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("انتهت جلسة التركيز")
-            .setContentText("تم فتح التطبيقات المحظورة بشكل طبيعي.")
+            .setContentTitle(getString(R.string.notification_done_title))
+            .setContentText(getString(R.string.notification_done_text))
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -113,7 +116,7 @@ class TimerService : Service() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "جلسات التركيز",
+            getString(R.string.notification_channel),
             NotificationManager.IMPORTANCE_LOW
         )
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
