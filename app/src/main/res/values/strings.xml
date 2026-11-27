@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">نسخه جديد</string>
-    <string name="accessibility_description">يحظر التطبيقات المختارة أثناء جلسة التركيز في تطبيق نسخه جديد، ويعرض شاشة منع فوق التطبيق.</string>
+    <string name="accessibility_description">خدمة حظر التطبيقات في نسخه جديد. عند فتح تطبيق محظور أثناء جلسة التركيز، تظهر شاشة حظر كاملة تمنع استخدامه حتى انتهاء الجلسة.</string>
+    <string name="blocking_title">التطبيق محظور</string>
 </resources>
