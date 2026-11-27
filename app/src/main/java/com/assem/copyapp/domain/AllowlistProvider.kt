@@ -36,10 +36,10 @@ class AllowlistProvider(private val context: Context) {
 
         try {
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-            val methods: List<InputMethodInfo>? = imm?.inputMethodList
+            val methods: List<InputMethodInfo>? = imm?.enabledInputMethodList
             methods?.forEach { info ->
                 try {
-                    if (info.isEnabled && info.packageName.isNotBlank()) result.add(info.packageName)
+                    if (info.packageName.isNotBlank()) result.add(info.packageName)
                 } catch (t: Throwable) {
                     // تجاهل لوحة مفاتيح مفقودة
                 }
