@@ -98,4 +98,111 @@
     <string name="notification_remaining">Remaining: %1$s</string>
     <string name="notification_done_title">Focus session finished</string>
     <string name="notification_done_text">Blocked apps are available again.</string>
+
+    <string name="tab_focus">Focus</string>
+    <string name="tab_rules">Rules</string>
+    <string name="tab_insights">Insights</string>
+    <string name="tab_settings">Settings</string>
+    <string name="mode_soft">Soft</string>
+    <string name="mode_hard">Hard</string>
+    <string name="mode_line">Mode: %1$s</string>
+    <string name="minute_short">m</string>
+    <string name="hard_mode_locked">Hard mode is locked: wait for the timer or use a friend key</string>
+    <string name="hard_mode_short">Hard mode</string>
+    <string name="hard_mode_blocking_note">Hard mode: no unconditional exit. Wait for the timer or use a friend key.</string>
+
+    <string name="perm_accessibility">Blocking</string>
+    <string name="perm_usage">Stats</string>
+    <string name="perm_notifications">Notifications</string>
+    <string name="perm_battery">Battery</string>
+
+    <string name="soft_break_title">End session (friction)</string>
+    <string name="soft_break_message">This will be recorded as a break. Wait %1$d seconds then confirm.</string>
+    <string name="soft_break_confirm">Confirm end</string>
+
+    <string name="rules_card">Rules and blockers</string>
+    <string name="package_hint">Package name</string>
+    <string name="section_hint">Section (e.g. reels)</string>
+    <string name="save_rule">Save rule</string>
+    <string name="rule_saved">Rule saved</string>
+    <string name="rule_deleted">Rule deleted</string>
+    <string name="delete">Delete</string>
+    <string name="detectors_card">Section detectors (Inspector)</string>
+    <string name="detector_note">No invented IDs. These values come from the real screen state read by Accessibility.</string>
+    <string name="detector_wait">Open the target app and come back to capture a node description.</string>
+    <string name="markers_hint">Comma-separated markers (optional)</string>
+    <string name="save_detector">Save detector</string>
+    <string name="detector_saved">Detector saved</string>
+    <string name="detector_deleted">Detector deleted</string>
+    <string name="budgets_card">Daily budget</string>
+    <string name="save_limit">Save budget</string>
+    <string name="limit_saved">Budget saved</string>
+    <string name="exceptions_card">Allowed exceptions</string>
+    <string name="add">Add</string>
+    <string name="exception_saved">Exception added</string>
+
+    <string name="score_card">Brain-rot score</string>
+    <string name="score_safe">Mostly safe</string>
+    <string name="score_medium">Moderate</string>
+    <string name="score_high">High risk</string>
+    <string name="score_unknown">Unknown</string>
+    <string name="streak_card">Day streak</string>
+    <string name="streak_days">%1$d consecutive days</string>
+    <string name="usage_card">Screen time</string>
+    <string name="counts_card">Manual counters</string>
+    <string name="count_reels">Reels</string>
+    <string name="count_shorts">Shorts</string>
+    <string name="count_feed">Scroll</string>
+    <string name="count_saved">Recorded</string>
+    <string name="digest_card">Daily digest</string>
+    <string name="digest_hint">Enable in Settings to get one daily score notification.</string>
+
+    <string name="general_card">General</string>
+    <string name="language_system">System</string>
+    <string name="language_ar">العربية</string>
+    <string name="language_en">English</string>
+    <string name="replay_onboarding">Replay onboarding</string>
+    <string name="session_defaults_card">Default session settings</string>
+    <string name="settings_locked_hint">Settings are read-only during a session.</string>
+    <string name="friend_key_card">Friend key</string>
+    <string name="friend_key_hint">Code used to exit Hard mode</string>
+    <string name="save_friend_key">Save key</string>
+    <string name="clear_friend_key">Clear key</string>
+    <string name="friend_key_saved">Key saved</string>
+    <string name="friend_key_note">Stored only as SHA-256, never in plain text.</string>
+    <string name="friend_key_wrong">Wrong key</string>
+    <string name="friend_key_unlock">Unlock with key</string>
+    <string name="wind_down_card">Wind-down</string>
+    <string name="wind_down_enable">Enable wind-down and bedtime</string>
+    <string name="wind_down_start">Wind-down start (minute of day)</string>
+    <string name="bedtime_start">Bedtime start (minute of day)</string>
+    <string name="backup_card">Backup and digest</string>
+    <string name="digest_enable">Daily digest</string>
+    <string name="export_json">Export JSON (copy)</string>
+    <string name="import_hint">Paste JSON to import</string>
+    <string name="import_json">Import</string>
+    <string name="import_ok">Import succeeded</string>
+    <string name="import_failed">Import failed</string>
+    <string name="about_card">About</string>
+    <string name="local_only_note">All data stays on the device. No server, no ads, no analytics.</string>
+
+    <string name="onboarding_title">New Copy — anti brain-rot system</string>
+    <string name="onboarding_body">It helps you cut scrolling and late-night use. Everything runs on your phone with no internet connection.</string>
+    <string name="onboarding_mode_note">Soft asks for friction before ending. Hard has no unconditional exit other than the timer or a friend key.</string>
+    <string name="onboarding_start">Get started</string>
+
+    <string name="reason_session">This app is blocked during a focus session.</string>
+    <string name="reason_strict">Strict mode allows only phone and messages.</string>
+    <string name="reason_budget">Daily budget for this app is used up.</string>
+    <string name="reason_schedule">A schedule rule is active now.</string>
+    <string name="reason_wind_down">Wind-down time.</string>
+    <string name="reason_bedtime">Bedtime.</string>
+    <string name="default_profile">Default profile</string>
+
+    <string name="tile_active">Session running</string>
+    <string name="tile_start">Start focus</string>
+    <string name="tile_description">Toggle New Copy focus session</string>
+    <string name="digest_channel">Daily digest</string>
+    <string name="digest_title">Your daily summary</string>
+    <string name="digest_text">Today\'s brain-rot score: %1$d / 100</string>
 </resources>
