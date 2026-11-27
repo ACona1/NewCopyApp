@@ -121,7 +121,7 @@ class BlockingActivity : AppCompatActivity() {
         }
 
         val message = TextView(this).apply {
-            text = "جلسة التركيز نشطة.\nلا يمكن استخدام هذا التطبيق حتى انتهاء الوقت المحدد."
+            text = "جلسة التركيز نشطة.\nتم إغلاق التطبيق في الخلفية، ولا يمكن استخدامه حتى انتهاء الوقت المحدد."
             textSize = 15f
             setTextColor(ContextCompat.getColor(this@BlockingActivity, R.color.muted))
             gravity = Gravity.CENTER
